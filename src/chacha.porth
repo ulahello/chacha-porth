@@ -278,7 +278,6 @@ in
   3 4  9 14 state _@ptr qr_index // diagonal 4
 end
 
-// TODO: if this is inlined, program segfaults (compiler bug?)
 proc block_no_add
   ptr // &mut State
   int // num_rounds
