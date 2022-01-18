@@ -313,6 +313,107 @@ in
   end
 end
 
+proc test_2.3.2_check3
+  int int int int int int int int int int int int int int int int
+  --
+in
+  dup 1312575650 != if // 0x4e3c50a2
+    "[2.3.2] after full 20 round block [15]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 3900952779 != if // 0xe883d0cb
+    "[2.3.2] after full 20 round block [14]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 3108902622 != if // 0xb94e16de
+    "[2.3.2] after full 20 round block [13]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 3516666549 != if // 0xd19c12b5
+    "[2.3.2] after full 20 round block [12]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 2718075865 != if // 0xa2028bd9
+    "[2.3.2] after full 20 round block [11]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 98026004 != if // 0x05d7c214
+    "[2.3.2] after full 20 round block [10]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 162176775 != if // 0x09aa9f07
+    "[2.3.2] after full 20 round block [9]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 1180992210 != if // 0x466482d2
+    "[2.3.2] after full 20 round block [8]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 1315755203 != if // 0x4e6cd4c3
+    "[2.3.2] after full 20 round block [7]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 2594841092 != if // 0x9aaa2204
+    "[2.3.2] after full 20 round block [6]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 57196595 != if // 0x0368c033
+    "[2.3.2] after full 20 round block [5]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 3354710471 != if // 0xc7f4d1c7
+    "[2.3.2] after full 20 round block [4]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 3295748259 != if // 0xc47120a3
+    "[2.3.2] after full 20 round block [3]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 534581072 != if // 0x1fdd0f50
+    "[2.3.2] after full 20 round block [2]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 358169553 != if // 0x15593bd1
+    "[2.3.2] after full 20 round block [1]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 3840405776 != if // 0xe4e7f110
+    "[2.3.2] after full 20 round block [0]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+end
+
 proc test_2.3.2 in
   memory state sizeof(State) end
     1634760805 // 0x61707865
@@ -336,15 +437,24 @@ proc test_2.3.2 in
   memory original sizeof(State) end
   sizeof(State) state original memcpy drop
 
+  // 20 rounds of chacha without final matrix addition
   state 20 block_no_add
 
   state @State
   test_2.3.2_check1 // TODO: bring this function back into body when type checking can handle it
 
+  // add original input to state
   state original state+
 
   state @State
   test_2.3.2_check2 // TODO: bring this function back into body when type checking can handle it
+
+  // do the same as previous two, but let chacha.porth do the addition
+  // at the end, `original` and `state` should be the same
+  original 20 block
+
+  original @State
+  test_2.3.2_check3 // TODO: bring this function back into body when type checking can handle it
 
   "[2.3.2] passed\n" puts
 end
