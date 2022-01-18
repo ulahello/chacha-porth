@@ -1,5 +1,3 @@
-// TODO: consistent ordering of args
-
 /// std.porth copypaste //////////////
 inline proc _ptr+ ptr int -- ptr in
   swap cast(int)
@@ -203,14 +201,14 @@ in
 end
 
 proc qr
-  int int int int // words (d, c, b, a)
+  int int int int // words (a, b, c, d)
   --
-  int int int int // words (d, c, b, a)
+  int int int int // words (a, b, c, d)
 in
-  memory a sizeof(word) end a !32
-  memory b sizeof(word) end b !32
-  memory c sizeof(word) end c !32
   memory d sizeof(word) end d !32
+  memory c sizeof(word) end c !32
+  memory b sizeof(word) end b !32
+  memory a sizeof(word) end a !32
 
   a @32 b @32 +      a !32 // a += b
   d @32 a @32 xor    d !32 // d ^= a
@@ -228,10 +226,10 @@ in
   b @32 c @32 xor    b !32 // b ^= c
   b @32 7     rotl32 b !32 // b <<<= 7
 
-  d @32
-  c @32
-  b @32
   a @32
+  b @32
+  c @32
+  d @32
 end
 
 proc qr_index
@@ -244,17 +242,17 @@ in
   memory b _sizeof(int) end b !64
   memory a _sizeof(int) end a !64
 
-  state   _@ptr sizeof(word) d @64 * _ptr+ @32
-    state _@ptr sizeof(word) c @64 * _ptr+ @32
+  state   _@ptr sizeof(word) a @64 * _ptr+ @32
     state _@ptr sizeof(word) b @64 * _ptr+ @32
-    state _@ptr sizeof(word) a @64 * _ptr+ @32
+    state _@ptr sizeof(word) c @64 * _ptr+ @32
+    state _@ptr sizeof(word) d @64 * _ptr+ @32
 
     qr
 
-    state _@ptr sizeof(word) a @64 * _ptr+ !32
-    state _@ptr sizeof(word) b @64 * _ptr+ !32
+    state _@ptr sizeof(word) d @64 * _ptr+ !32
     state _@ptr sizeof(word) c @64 * _ptr+ !32
-  state   _@ptr sizeof(word) d @64 * _ptr+ !32
+    state _@ptr sizeof(word) b @64 * _ptr+ !32
+  state   _@ptr sizeof(word) a @64 * _ptr+ !32
 end
 
 proc round_odd

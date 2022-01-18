@@ -25,20 +25,14 @@ proc test_utils in
 end
 
 proc test_2.1.1 in
-  19088743     // d = 0x01234567
-    2609737539 // c = 0x9b8d6f43
+  286331153    // a = 0x11111111
     16909060   // b = 0x01020304
-    286331153  // a = 0x11111111
+    2609737539 // c = 0x9b8d6f43
+    19088743   // d = 0x01234567
     qr
 
-    dup 3928658676 != if // assert a == 0xea2a92f4
-      "[2.1.1] a: unexpected " puts putu "\n" puts
-      1 exit
-      else drop
-    end
-
-    dup 3407673550 != if // assert b == 0xcb1cf8ce
-      "[2.1.1] b: unexpected " puts putu "\n" puts
+    dup 1484899515 != if // assert d == 0x5881c4bb
+      "[2.1.1] d: unexpected " puts putu "\n" puts
       1 exit
       else drop
     end
@@ -49,8 +43,14 @@ proc test_2.1.1 in
       else drop
     end
 
-  dup 1484899515 != if // assert d == 0x5881c4bb
-    "[2.1.1] d: unexpected " puts putu "\n" puts
+    dup 3407673550 != if // assert b == 0xcb1cf8ce
+      "[2.1.1] b: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+  dup 3928658676 != if // assert a == 0xea2a92f4
+    "[2.1.1] a: unexpected " puts putu "\n" puts
     1 exit
     else drop
   end
