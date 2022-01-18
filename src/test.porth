@@ -1,12 +1,14 @@
 include "std.porth"
 include "chacha.porth"
 
+const U32_MAX 4294967295 end
+
 inline proc trunc32 int -- int in
-  4294967295 and
+  U32_MAX and
 end
 
 proc test_utils in
-  4294967295 1 + trunc32 0 != if
+  U32_MAX 1 + trunc32 0 != if
     "[test_utils] addition failed\n" puts
     1 exit
   end
