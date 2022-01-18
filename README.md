@@ -11,7 +11,7 @@ generation.
 ## Usage
 
 This is intended for developers. If you want to use ChaCha, include
-"chacha.porth". It doesn't have any explicit dependencies (it copypastes some
-std.porth procs with different namespaces).
+[chacha.porth](./src/chacha.porth). It doesn't have any explicit dependencies
+(it copypastes some std.porth procs with different namespaces).
 
 For an example of the library's usage, see [the examples](./examples).
