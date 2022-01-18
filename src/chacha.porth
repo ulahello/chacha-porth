@@ -1,15 +1,18 @@
 /// std.porth copypaste //////////////
+const _sizeof(int) 8 end
+const _sizeof(ptr) _sizeof(int) end
+
+inline proc _@ptr ptr -- ptr in @64 cast(ptr) end
+inline proc _!ptr ptr ptr in !64 end
+inline proc _inc64 ptr in dup @64 1 + swap !64 end
+
 inline proc _ptr+ ptr int -- ptr in
   swap cast(int)
   swap cast(int)
   +
   cast(ptr)
 end
-const _sizeof(int) 8 end
-const _sizeof(ptr) _sizeof(int) end
-inline proc _!ptr ptr ptr in !64 end
-inline proc _@ptr ptr -- ptr in @64 cast(ptr) end
-inline proc _inc64 ptr in dup @64 1 + swap !64 end
+
 proc _memcpy
   int // size
   ptr // src
