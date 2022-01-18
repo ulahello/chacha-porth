@@ -1,0 +1,620 @@
+// TODO: split up into multiple files (standalone library + test bin)
+// TODO: consistent ordering of args
+// TODO: type checking this program hangs exponentially with more `dup if else drop` blocks
+//       to compile, i have to manually disable type checking
+
+include "std.porth"
+
+const sizeof(word) sizeof(u32)      end
+const bits(word)   sizeof(word) 8 * end
+
+const CHACHA_CONST[0] 1634760805 end // b"expa"
+const CHACHA_CONST[1] 857760878  end // b"nd-3"
+const CHACHA_CONST[2] 2036477234 end // b"2 by"
+const CHACHA_CONST[3] 1797285236 end // b"te k"
+
+inline proc ^ int int -- int in
+  // (a | b) & (!(a & b))
+  over over or
+  rot rot
+  and not
+  and
+end
+
+// see <https://en.wikipedia.org/wiki/Circular_shift#Implementing_circular_shifts>
+inline proc <<<
+  int // value
+  int // n bits left
+  --
+  int
+in
+  // value << count | value >> (32 - count)
+  over over
+  bits(word) swap - shr
+  rot rot
+  shl
+  or
+end
+
+const sizeof(State.const)   sizeof(word) 4 * end
+const sizeof(State.key)     sizeof(word) 8 * end
+const sizeof(State.counter) sizeof(word) 1 * end
+const sizeof(State.nonce)   sizeof(word) 3 * end
+
+const offsetof(State.const)   sizeof(State.const)   offset end
+const offsetof(State.key)     sizeof(State.key)     offset end
+const offsetof(State.counter) sizeof(State.counter) offset end
+const offsetof(State.nonce)   sizeof(State.nonce)   offset end
+const sizeof(State)                                  reset end
+
+inline proc State.const    ptr -- ptr in offsetof(State.const)   ptr+ end
+inline proc State.key      ptr -- ptr in offsetof(State.key)     ptr+ end
+inline proc State.counter  ptr -- ptr in offsetof(State.counter) ptr+ end
+inline proc State.nonce    ptr -- ptr in offsetof(State.nonce)   ptr+ end
+
+inline proc @State.const
+  ptr
+  --
+  int int int int
+in
+  State.const
+  dup sizeof(word) 0 * ptr+ @32 swap
+  dup sizeof(word) 1 * ptr+ @32 swap
+  dup sizeof(word) 2 * ptr+ @32 swap
+      sizeof(word) 3 * ptr+ @32
+end
+
+inline proc @State.key
+  ptr
+  --
+  int int int int int int int int
+in
+  State.key
+  dup sizeof(word) 0 * ptr+ @32 swap
+  dup sizeof(word) 1 * ptr+ @32 swap
+  dup sizeof(word) 2 * ptr+ @32 swap
+  dup sizeof(word) 3 * ptr+ @32 swap
+  dup sizeof(word) 4 * ptr+ @32 swap
+  dup sizeof(word) 5 * ptr+ @32 swap
+  dup sizeof(word) 6 * ptr+ @32 swap
+      sizeof(word) 7 * ptr+ @32
+end
+
+inline proc @State.counter ptr -- int in State.counter @32 end
+
+inline proc @State.nonce
+  ptr
+  --
+  int int int
+in
+  State.nonce
+  dup sizeof(word) 0 * ptr+ @32 swap
+  dup sizeof(word) 1 * ptr+ @32 swap
+      sizeof(word) 2 * ptr+ @32
+end
+
+inline proc !State.const
+  int int int int ptr
+in
+  State.const
+  dup sizeof(word) 3 * ptr+ rot swap !32
+  dup sizeof(word) 2 * ptr+ rot swap !32
+  dup sizeof(word) 1 * ptr+ rot swap !32
+  dup sizeof(word) 0 * ptr+ rot swap !32
+  drop
+end
+
+inline proc !State.key
+  int int int int int int int int ptr
+in
+  State.key
+  dup sizeof(word) 7 * ptr+ rot swap !32
+  dup sizeof(word) 6 * ptr+ rot swap !32
+  dup sizeof(word) 5 * ptr+ rot swap !32
+  dup sizeof(word) 4 * ptr+ rot swap !32
+  dup sizeof(word) 3 * ptr+ rot swap !32
+  dup sizeof(word) 2 * ptr+ rot swap !32
+  dup sizeof(word) 1 * ptr+ rot swap !32
+  dup sizeof(word) 0 * ptr+ rot swap !32
+  drop
+end
+
+inline proc !State.counter int ptr in State.counter !32 end
+
+inline proc !State.nonce
+  int int int ptr
+in
+  State.nonce
+  dup sizeof(word) 2 * ptr+ rot swap !32
+  dup sizeof(word) 1 * ptr+ rot swap !32
+  dup sizeof(word) 0 * ptr+ rot swap !32
+  drop
+end
+
+proc @State
+  ptr
+  --
+  int int int int int int int int int int int int int int int int
+in
+  memory start sizeof(ptr) end start !ptr
+  start @ptr @State.const
+  start @ptr @State.key
+  start @ptr @State.counter
+  start @ptr @State.nonce
+end
+
+proc !State
+  int int int int int int int int int int int int int int int int ptr
+in
+  memory loc sizeof(ptr) end loc !ptr
+  loc @ptr !State.nonce
+  loc @ptr !State.counter
+  loc @ptr !State.key
+  loc @ptr !State.const
+end
+
+proc qr
+  int int int int // (d, c, b, a)
+  --
+  int int int int // (d, c, b, a)
+in
+  memory a sizeof(word) end a !32
+  memory b sizeof(word) end b !32
+  memory c sizeof(word) end c !32
+  memory d sizeof(word) end d !32
+
+  a @32 b @32  +  a !32 // a += b
+  d @32 a @32  ^  d !32 // d ^= a
+  d @32 16    <<< d !32 // d <<<= 16
+
+  c @32 d @32  +  c !32 // c += d
+  b @32 c @32  ^  b !32 // b ^= c
+  b @32 12    <<< b !32 // b <<<= 12
+
+  a @32 b @32  +  a !32 // a += b
+  d @32 a @32  ^  d !32 // d ^= a
+  d @32 8     <<< d !32 // d <<<= 8
+
+  c @32 d @32  +  c !32 // c += d
+  b @32 c @32  ^  b !32 // b ^= c
+  b @32 7     <<< b !32 // b <<<= 7
+
+  d @32
+  c @32
+  b @32
+  a @32
+end
+
+proc qr_index
+  int int int int // indexes (a, b, c, d)
+  ptr // State
+in
+  memory state sizeof(ptr) end state !ptr
+  memory d sizeof(int) end d !64
+  memory c sizeof(int) end c !64
+  memory b sizeof(int) end b !64
+  memory a sizeof(int) end a !64
+
+  state   @ptr sizeof(word) d @64 * ptr+ @32
+    state @ptr sizeof(word) c @64 * ptr+ @32
+    state @ptr sizeof(word) b @64 * ptr+ @32
+    state @ptr sizeof(word) a @64 * ptr+ @32
+
+    qr
+
+    state @ptr sizeof(word) a @64 * ptr+ !32
+    state @ptr sizeof(word) b @64 * ptr+ !32
+    state @ptr sizeof(word) c @64 * ptr+ !32
+  state   @ptr sizeof(word) d @64 * ptr+ !32
+end
+
+proc round_odd
+  ptr // State
+in
+  memory state sizeof(ptr) end state !ptr
+  0 4  8 12 state @ptr qr_index // column 1
+  1 5  9 13 state @ptr qr_index // column 2
+  2 6 10 14 state @ptr qr_index // column 3
+  3 7 11 15 state @ptr qr_index // column 4
+end
+
+proc round_even
+  ptr // State
+in
+  memory state sizeof(ptr) end state !ptr
+  0 5 10 15 state @ptr qr_index // diagonal 1
+  1 6 11 12 state @ptr qr_index // diagonal 2
+  2 7  8 13 state @ptr qr_index // diagonal 3
+  3 4  9 14 state @ptr qr_index // diagonal 4
+end
+
+// TODO: if this is inlined, program segfaults (compiler bug?)
+proc block_no_add
+  ptr // State
+  int // num_rounds
+in
+  1 while over over >= do
+    dup 1 and 0 = if // if current round is even
+      rot dup round_even
+      rot rot
+    else
+      rot dup round_odd
+      rot rot
+    end
+    1 +
+  end drop
+  drop drop
+end
+
+proc state+
+  // State 1 += State 2
+  ptr // State 1
+  ptr // State 2
+in
+  memory s2 sizeof(ptr) end s2 !ptr
+  memory s1 sizeof(ptr) end s1 !ptr
+  0 while dup sizeof(State) < do
+    s1 @ptr over ptr+ @32      // push s1[i]
+    over s2 @ptr swap ptr+ @32 // push s2[i]
+    +
+    over s1 @ptr swap ptr+ !32 // s1[i] = s1[i] + s2[i]
+
+    sizeof(word) +
+  end drop
+end
+
+proc block
+  ptr // State
+  int // num_rounds
+in
+  // make copy of original state
+  memory original sizeof(State) end
+  over sizeof(State) swap original memcpy drop
+
+  // compute rounds
+  over over block_no_add
+
+  // add original to current state
+  drop original state+
+end
+
+inline proc trunc32 int -- int in
+  4294967295 and
+end
+
+proc test_utils in
+  4294967295 1 + trunc32 0 != if
+    "[test_utils] addition failed\n" puts
+    1 exit
+  end
+
+  42 111 ^ 69 != if
+    "[test_utils] xor failed\n" puts
+    1 exit
+  end
+
+  4521984 16 <<< trunc32 69 != if
+     "[test_utils] rotl failed\n" puts
+     1 exit
+  end
+
+  "[test_utils] passed\n" puts
+end
+
+proc test_2.1.1 in
+  19088743     // d = 0x01234567
+    2609737539 // c = 0x9b8d6f43
+    16909060   // b = 0x01020304
+    286331153  // a = 0x11111111
+    qr
+
+    dup 3928658676 != if // assert a == 0xea2a92f4
+      "[2.1.1] a: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3407673550 != if // assert b == 0xcb1cf8ce
+      "[2.1.1] b: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 1166100270 != if // assert c == 0x4581472e
+      "[2.1.1] c: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+  dup 1484899515 != if // assert d == 0x5881c4bb
+    "[2.1.1] d: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  "[2.1.1] passed\n" puts
+end
+
+proc test_2.2.1 in
+  memory state sizeof(State) end
+    2274701792 // 0x879531e0
+    3320640381 // 0xc5ecf37d
+    1365533105 // 0x516461b1
+    3383111562 // 0xc9a62f8a
+    1153568499 // 0x44c20ef3
+    865120127  // 0x3390af7f
+    3657197835 // 0xd9fc690b
+    710897996  // 0x2a5f714c
+    1396123495 // 0x53372767
+    2953467441 // 0xb00a5631
+    2538361882 // 0x974c541a
+    899586403  // 0x359e9963
+    1553404001 // 0x5c971061
+    1029904009 // 0x3d631689
+    546888150  // 0x2098d9d6
+    2447102752 // 0x91dbd320
+  state !State
+
+  state   sizeof(word) 13 * ptr+ @32
+    state sizeof(word)  8 * ptr+ @32
+    state sizeof(word)  7 * ptr+ @32
+    state sizeof(word)  2 * ptr+ @32
+    qr
+
+    dup 3182986972 != if // assert a == 0xbdb886dc
+      "[2.2.1] a: unexpected: " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3484200914 != if // assert b == 0xcfacafd2
+      "[2.2.1] b: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3832277632 != if // assert c == 0xe46bea80
+      "[2.2.1] c: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+  dup 3435166841 != if // assert d == 0xccc07c79
+    "[2.2.1] d: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  "[2.2.1] passed\n" puts
+end
+
+proc test_2.3.2 in
+  memory state sizeof(State) end
+    1634760805 // 0x61707865
+    857760878  // 0x3320646e
+    2036477234 // 0x79622d32
+    1797285236 // 0x6b206574
+    50462976   // 0x03020100
+    117835012  // 0x07060504
+    185207048  // 0x0b0a0908
+    252579084  // 0x0f0e0d0c
+    319951120  // 0x13121110
+    387323156  // 0x17161514
+    454695192  // 0x1b1a1918
+    522067228  // 0x1f1e1d1c
+    1          // 0x00000001
+    150994944  // 0x09000000
+    1241513984 // 0x4a000000
+    0          // 0x00000000
+  state !State
+
+  memory original sizeof(State) end
+  sizeof(State) state original memcpy drop
+
+  state 20 block_no_add
+
+  state @State
+    dup 1312575650 != if // 0x4e3c50a2
+      "[2.3.2] after 20 rounds [15]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 2659438795 != if // 0x9e83d0cb
+      "[2.3.2] after 20 rounds [14]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 2957907678 != if // 0xb04e16de
+      "[2.3.2] after 20 rounds [13]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3516666548 != if // 0xd19c12b4
+      "[2.3.2] after 20 rounds [12]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 2196008637 != if // 0x82e46ebd
+      "[2.3.2] after 20 rounds [11]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3938298108 != if // 0xeabda8fc
+      "[2.3.2] after 20 rounds [10]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 4069820915 != if // 0xf29489f3
+      "[2.3.2] after 20 rounds [9]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 861041090  != if // 0x335271c2
+      "[2.3.2] after 20 rounds [8]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 1063176119 != if // 0x3f5ec7b7
+      "[2.3.2] after 20 rounds [7]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 2409634044 != if // 0x8fa018fc
+      "[2.3.2] after 20 rounds [6]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 4234328879 != if // 0xfc62bb2f
+      "[2.3.2] after 20 rounds [5]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3304247495 != if // 0xc4f2d0c7
+      "[2.3.2] after 20 rounds [4]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 1498463023 != if // 0x5950bb2f
+      "[2.3.2] after 20 rounds [3]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 2793071134 != if // 0xa67ae21e
+      "[2.3.2] after 20 rounds [2]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3795375971 != if // 0xe238d763
+      "[2.3.2] after 20 rounds [1]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+  dup 2205644971 != if // 0x837778ab
+    "[2.3.2] after 20 rounds [0]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  state original state+
+
+  state @State
+    dup 1312575650 != if // 0x4e3c50a2
+      "[2.3.2] after adding original state [15]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3900952779 != if // 0xe883d0cb
+      "[2.3.2] after adding original state [14]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3108902622 != if // 0xb94e16de
+      "[2.3.2] after adding original state [13]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3516666549 != if // 0xd19c12b5
+      "[2.3.2] after adding original state [12]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 2718075865 != if // 0xa2028bd9
+      "[2.3.2] after adding original state [11]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 98026004 != if // 0x05d7c214
+      "[2.3.2] after adding original state [10]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 162176775 != if // 0x09aa9f07
+      "[2.3.2] after adding original state [9]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 1180992210 != if // 0x466482d2
+      "[2.3.2] after adding original state [8]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 1315755203 != if // 0x4e6cd4c3
+      "[2.3.2] after adding original state [7]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 2594841092 != if // 0x9aaa2204
+      "[2.3.2] after adding original state [6]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 57196595 != if // 0x0368c033
+      "[2.3.2] after adding original state [5]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3354710471 != if // 0xc7f4d1c7
+      "[2.3.2] after adding original state [4]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 3295748259 != if // 0xc47120a3
+      "[2.3.2] after adding original state [3]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 534581072 != if // 0x1fdd0f50
+      "[2.3.2] after adding original state [2]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+    dup 358169553 != if // 0x15593bd1
+      "[2.3.2] after adding original state [1]: unexpected " puts putu "\n" puts
+      1 exit
+      else drop
+    end
+
+  dup 3840405776 != if // 0xe4e7f110
+    "[2.3.2] after adding original state [0]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  "[2.3.2] passed\n" puts
+end
+
+proc main in
+  test_utils
+  test_2.1.1
+  test_2.2.1
+  test_2.3.2
+end
