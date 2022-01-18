@@ -42,8 +42,13 @@ const CHACHA_CONST[1] 857760878  end // b"nd-3"
 const CHACHA_CONST[2] 2036477234 end // b"2 by"
 const CHACHA_CONST[3] 1797285236 end // b"te k"
 
-inline proc xor int int -- int in
-  // (a | b) & (!(a & b))
+inline proc xor
+  int // x
+  int // y
+  --
+  int // x ^ y
+in
+  // (x | y) & (!(x & y))
   over over or
   rot rot
   and not
@@ -53,9 +58,9 @@ end
 // see <https://en.wikipedia.org/wiki/Circular_shift#Implementing_circular_shifts>
 inline proc rotl32
   int // value
-  int // n bits left
+  int // count
   --
-  int
+  int // value <<< count
 in
   // value << count | value >> (32 - count)
   over over
@@ -82,9 +87,9 @@ inline proc State.counter  ptr -- ptr in offsetof(State.counter) _ptr+ end
 inline proc State.nonce    ptr -- ptr in offsetof(State.nonce)   _ptr+ end
 
 inline proc @State.const
-  ptr
+  ptr // &State
   --
-  int int int int
+  int int int int // words (0..4)
 in
   State.const
   dup sizeof(word) 0 * _ptr+ @32 swap
@@ -94,9 +99,9 @@ in
 end
 
 inline proc @State.key
-  ptr
+  ptr // &State
   --
-  int int int int int int int int
+  int int int int int int int int // words (4..11)
 in
   State.key
   dup sizeof(word) 0 * _ptr+ @32 swap
@@ -109,12 +114,18 @@ in
       sizeof(word) 7 * _ptr+ @32
 end
 
-inline proc @State.counter ptr -- int in State.counter @32 end
+inline proc @State.counter
+  ptr // &State
+  --
+  int // word at index 11
+in
+  State.counter @32
+end
 
 inline proc @State.nonce
-  ptr
+  ptr // &State
   --
-  int int int
+  int int int // words (13..16)
 in
   State.nonce
   dup sizeof(word) 0 * _ptr+ @32 swap
@@ -123,7 +134,8 @@ in
 end
 
 inline proc !State.const
-  int int int int ptr
+  int int int int // words (0..4)
+  ptr // &mut State
 in
   State.const
   dup sizeof(word) 3 * _ptr+ rot swap !32
@@ -134,7 +146,8 @@ in
 end
 
 inline proc !State.key
-  int int int int int int int int ptr
+  int int int int int int int int // words (4..11)
+  ptr // &mut State
 in
   State.key
   dup sizeof(word) 7 * _ptr+ rot swap !32
@@ -148,10 +161,16 @@ in
   drop
 end
 
-inline proc !State.counter int ptr in State.counter !32 end
+inline proc !State.counter
+  int // word at index 11
+  ptr // &mut State
+in
+  State.counter !32
+end
 
 inline proc !State.nonce
-  int int int ptr
+  int int int // words (13..16)
+  ptr // &mut State
 in
   State.nonce
   dup sizeof(word) 2 * _ptr+ rot swap !32
@@ -161,9 +180,9 @@ in
 end
 
 proc @State
-  ptr
+  ptr // &State
   --
-  int int int int int int int int int int int int int int int int
+  int int int int int int int int int int int int int int int int // words (0..16)
 in
   memory start _sizeof(ptr) end start _!ptr
   start _@ptr @State.const
@@ -173,7 +192,8 @@ in
 end
 
 proc !State
-  int int int int int int int int int int int int int int int int ptr
+  int int int int int int int int int int int int int int int int // words (0..16)
+  ptr // &mut State
 in
   memory loc _sizeof(ptr) end loc _!ptr
   loc _@ptr !State.nonce
@@ -183,9 +203,9 @@ in
 end
 
 proc qr
-  int int int int // (d, c, b, a)
+  int int int int // words (d, c, b, a)
   --
-  int int int int // (d, c, b, a)
+  int int int int // words (d, c, b, a)
 in
   memory a sizeof(word) end a !32
   memory b sizeof(word) end b !32
@@ -216,7 +236,7 @@ end
 
 proc qr_index
   int int int int // indexes (a, b, c, d)
-  ptr // State
+  ptr // &mut State
 in
   memory state _sizeof(ptr) end state _!ptr
   memory d _sizeof(int) end d !64
@@ -238,7 +258,7 @@ in
 end
 
 proc round_odd
-  ptr // State
+  ptr // &mut State
 in
   memory state _sizeof(ptr) end state _!ptr
   0 4  8 12 state _@ptr qr_index // column 1
@@ -248,7 +268,7 @@ in
 end
 
 proc round_even
-  ptr // State
+  ptr // &mut State
 in
   memory state _sizeof(ptr) end state _!ptr
   0 5 10 15 state _@ptr qr_index // diagonal 1
@@ -259,7 +279,7 @@ end
 
 // TODO: if this is inlined, program segfaults (compiler bug?)
 proc block_no_add
-  ptr // State
+  ptr // &mut State
   int // num_rounds
 in
   1 while over over >= do
@@ -275,10 +295,10 @@ in
   drop drop
 end
 
+// s1 += s2
 proc state+
-  // State 1 += State 2
-  ptr // State 1
-  ptr // State 2
+  ptr // s1: &mut State
+  ptr // s2: &State
 in
   memory s2 _sizeof(ptr) end s2 _!ptr
   memory s1 _sizeof(ptr) end s1 _!ptr
@@ -293,7 +313,7 @@ in
 end
 
 proc block
-  ptr // State
+  ptr // &mut State
   int // num_rounds
 in
   // make copy of original state
