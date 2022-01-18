@@ -29,7 +29,7 @@ planned to be fixed in future versions of the compiler.
 
 ```console
 $ # Where $TARGET is your preferred target.
-$ porth com -s -t $TARGET ./src/test.porth && ./src/test
+$ porth com -s -t $TARGET ./src/test.porth
 [INFO] renaming ./src/test.tmp -> ./src/test
 $ ./src/test
 [test_utils] passed
