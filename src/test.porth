@@ -78,29 +78,32 @@ proc test_2.2.1 in
     2447102752 // 0x91dbd320
   state !State
 
-  state   sizeof(word) 13 * ptr+ @32
-    state sizeof(word)  8 * ptr+ @32
-    state sizeof(word)  7 * ptr+ @32
-    state sizeof(word)  2 * ptr+ @32
-    qr
+  // compute quarter round with indexes
+  2 7 8 13 state qr_index
 
-    dup 3182986972 != if // assert a == 0xbdb886dc
-      "[2.2.1] a: unexpected: " puts putu "\n" puts
-      1 exit
-      else drop
-    end
+  // push d, c, b, a to stack
+  state sizeof(word) 13 * ptr+ @32
+  state sizeof(word)  8 * ptr+ @32
+  state sizeof(word)  7 * ptr+ @32
+  state sizeof(word)  2 * ptr+ @32
 
-    dup 3484200914 != if // assert b == 0xcfacafd2
-      "[2.2.1] b: unexpected " puts putu "\n" puts
-      1 exit
-      else drop
-    end
+  dup 3182986972 != if // assert a == 0xbdb886dc
+    "[2.2.1] a: unexpected: " puts putu "\n" puts
+    1 exit
+    else drop
+  end
 
-    dup 3832277632 != if // assert c == 0xe46bea80
-      "[2.2.1] c: unexpected " puts putu "\n" puts
-      1 exit
-      else drop
-    end
+  dup 3484200914 != if // assert b == 0xcfacafd2
+    "[2.2.1] b: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup 3832277632 != if // assert c == 0xe46bea80
+    "[2.2.1] c: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
 
   dup 3435166841 != if // assert d == 0xccc07c79
     "[2.2.1] d: unexpected " puts putu "\n" puts
