@@ -22,7 +22,7 @@ For an example of the library's usage, see [the examples](./examples).
 
 To test the implementation, compile and run [test.porth](./src/test.porth). It
 compares the output from the library to the test vectors described in [RFC
-7539](./res/chacha rfc7539.txt).
+7539](./res/chacha-rfc7539.txt).
 
 Be aware that currently, type checking takes an unusually long time. This is
 planned to be fixed in future versions of the compiler.
