@@ -1,0 +1,19 @@
+include "../src/std.porth"
+include "../src/chacha.porth"
+
+proc main in
+  memory state sizeof(State) end
+    CHACHA_CONST[0]
+    CHACHA_CONST[1]
+    CHACHA_CONST[2]
+    CHACHA_CONST[3]
+    0 0 0 0
+    0 0 0 0
+    0 0 0 0
+  state !State
+
+  while true do
+    state 20 block
+    sizeof(State) state puts
+  end
+end
