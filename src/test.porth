@@ -14,12 +14,12 @@ proc test_utils in
     1 exit
   end
 
-  42 111 ^ 69 != if
+  42 111 xor 69 != if
     "[test_utils] xor failed\n" puts
     1 exit
   end
 
-  4521984 16 <<< trunc32 69 != if
+  4521984 16 rotl32 trunc32 69 != if
      "[test_utils] rotl failed\n" puts
      1 exit
   end

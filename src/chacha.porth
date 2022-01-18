@@ -1,6 +1,5 @@
 // TODO: consistent ordering of args
 
-const bits(word)   sizeof(word) 8 * end
 /// std.porth copypaste //////////////
 inline proc _ptr+ ptr int -- ptr in
   swap cast(int)
@@ -52,7 +51,7 @@ inline proc xor int int -- int in
 end
 
 // see <https://en.wikipedia.org/wiki/Circular_shift#Implementing_circular_shifts>
-inline proc <<<
+inline proc rotl32
   int // value
   int // n bits left
   --
@@ -60,7 +59,7 @@ inline proc <<<
 in
   // value << count | value >> (32 - count)
   over over
-  bits(word) swap - shr
+  32 swap - shr
   rot rot
   shl
   or
@@ -193,21 +192,21 @@ in
   memory c sizeof(word) end c !32
   memory d sizeof(word) end d !32
 
-  a @32 b @32  +  a !32 // a += b
-  d @32 a @32  ^  d !32 // d ^= a
-  d @32 16    <<< d !32 // d <<<= 16
+  a @32 b @32 +      a !32 // a += b
+  d @32 a @32 xor    d !32 // d ^= a
+  d @32 16    rotl32 d !32 // d <<<= 16
 
-  c @32 d @32  +  c !32 // c += d
-  b @32 c @32  ^  b !32 // b ^= c
-  b @32 12    <<< b !32 // b <<<= 12
+  c @32 d @32 +      c !32 // c += d
+  b @32 c @32 xor    b !32 // b ^= c
+  b @32 12    rotl32 b !32 // b <<<= 12
 
-  a @32 b @32  +  a !32 // a += b
-  d @32 a @32  ^  d !32 // d ^= a
-  d @32 8     <<< d !32 // d <<<= 8
+  a @32 b @32 +      a !32 // a += b
+  d @32 a @32 xor    d !32 // d ^= a
+  d @32 8     rotl32 d !32 // d <<<= 8
 
-  c @32 d @32  +  c !32 // c += d
-  b @32 c @32  ^  b !32 // b ^= c
-  b @32 7     <<< b !32 // b <<<= 7
+  c @32 d @32 +      c !32 // c += d
+  b @32 c @32 xor    b !32 // b ^= c
+  b @32 7     rotl32 b !32 // b <<<= 7
 
   d @32
   c @32
