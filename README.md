@@ -25,11 +25,12 @@ compares the output from the library to the test vectors described in [RFC
 7539](./res/chacha-rfc7539.txt).
 
 Be aware that currently, type checking takes an unusually long time. This is
-planned to be fixed in future versions of the compiler.
+planned to be fixed in future versions of the compiler. For now, you should
+disable type checking with the `-unsafe` flag.
 
 ```console
 $ # Where $TARGET is your preferred target.
-$ porth com -s -t $TARGET ./src/test.porth
+$ porth -unsafe com -s -t $TARGET ./src/test.porth
 [INFO] renaming ./src/test.tmp -> ./src/test
 $ ./src/test
 [test_utils] passed
