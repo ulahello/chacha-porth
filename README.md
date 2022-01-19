@@ -25,8 +25,8 @@ compares the output from the library to the test vectors described in [RFC
 7539](./res/chacha-rfc7539.txt).
 
 Be aware that currently, type checking takes an unusually long time. This is
-planned to be fixed in future versions of the compiler. For now, you should
-disable type checking with the `-unsafe` flag.
+planned to be fixed in future versions of the compiler. For now, you can disable
+type checking with the `-unsafe` flag.
 
 ```console
 $ # Where $TARGET is your preferred target.
