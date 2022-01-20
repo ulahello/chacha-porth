@@ -1,3 +1,13 @@
+The [Porth standard library](./src/std.porth) is licensed under the MIT license.
+The copyright is owned by Alexey Kutepov.
+
+The terms for distributing [RFC 7539](./res/chacha-rfc7539.txt) are found in
+[RFC 5378](https://datatracker.ietf.org/doc/rfc5378/).
+
+Everything else in this repository is licensed under the MIT license (see
+below).
+
+```
 MIT License
 
 Copyright (c) 2022 Ula Shipman
@@ -19,3 +29,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
