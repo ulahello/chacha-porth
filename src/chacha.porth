@@ -1,4 +1,4 @@
-/// std.porth copypaste //////////////
+/// BEGIN std.porth copypaste + rename ; MIT license, src by Alexey Kutepov ////
 const _sizeof(int) 8 end
 const _sizeof(ptr) _sizeof(int) end
 
@@ -34,7 +34,7 @@ in
     1 -
   end drop
 end
-/// end std.porth copypaste //////////////
+/// END std.porth copypaste ////////////////////////////////////////////////////
 
 const sizeof(word) 4 end
 
