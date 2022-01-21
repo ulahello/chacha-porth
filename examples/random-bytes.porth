@@ -13,7 +13,7 @@ proc main in
   state !State
 
   while true do
-    state 20 block
+    20 state block
     sizeof(State) state puts
   end
 end

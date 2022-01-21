@@ -443,7 +443,7 @@ proc test_2.3.2 in
   sizeof(State) state original memcpy drop
 
   // 20 rounds of chacha without final matrix addition
-  state 20 block_no_add
+  20 state block_no_add
 
   state @State
   test_2.3.2_check1 // TODO: bring this function back into body when type checking can handle it
@@ -456,7 +456,7 @@ proc test_2.3.2 in
 
   // do the same as previous two, but let chacha.porth do the addition
   // at the end, `original` and `state` should be the same
-  original 20 block
+  20 original block
 
   original @State
   test_2.3.2_check3 // TODO: bring this function back into body when type checking can handle it

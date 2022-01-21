@@ -278,12 +278,11 @@ in
   end
 end
 
-// TODO: swap arg order so call looks like `20 state block`
 proc block_no_add
-  ptr // &mut State
   int // num_rounds
+  ptr // &mut State
 in
-  let state rounds in
+  let rounds state in
     1 while dup rounds <= do
       dup 1 and 0 = if // if current round is even
         state round_even
@@ -312,18 +311,17 @@ in
   end
 end
 
-// TODO: swap arg order so call looks like `20 state block`
 proc block
-  ptr // &mut State
   int // num_rounds
+  ptr // &mut State
 in
-  let state rounds in
+  let rounds state in
     // make copy of original state
     memory original sizeof(State) end
     sizeof(State) state original _memcpy drop
 
     // compute rounds
-    state rounds block_no_add
+    rounds state block_no_add
 
     // add original to current state
     state original state+
