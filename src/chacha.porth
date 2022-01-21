@@ -185,22 +185,24 @@ proc @State
   --
   int int int int int int int int int int int int int int int int // words (0..16)
 in
-  memory start _sizeof(ptr) end start _!ptr
-  start _@ptr @State.const
-  start _@ptr @State.key
-  start _@ptr @State.counter
-  start _@ptr @State.nonce
+  let src in
+    src @State.const
+    src @State.key
+    src @State.counter
+    src @State.nonce
+  end
 end
 
 proc !State
   int int int int int int int int int int int int int int int int // words (0..16)
   ptr // &mut State
 in
-  memory loc _sizeof(ptr) end loc _!ptr
-  loc _@ptr !State.nonce
-  loc _@ptr !State.counter
-  loc _@ptr !State.key
-  loc _@ptr !State.const
+  let dst in
+    dst !State.nonce
+    dst !State.counter
+    dst !State.key
+    dst !State.const
+  end
 end
 
 proc qr
@@ -239,60 +241,58 @@ proc qr_index
   int int int int // indexes (a, b, c, d)
   ptr // &mut State
 in
-  memory state _sizeof(ptr) end state _!ptr
-  memory d _sizeof(int) end d !64
-  memory c _sizeof(int) end c !64
-  memory b _sizeof(int) end b !64
-  memory a _sizeof(int) end a !64
-
-  state   _@ptr sizeof(word) a @64 * _ptr+ @32
-    state _@ptr sizeof(word) b @64 * _ptr+ @32
-    state _@ptr sizeof(word) c @64 * _ptr+ @32
-    state _@ptr sizeof(word) d @64 * _ptr+ @32
+  let a b c d state in
+    state sizeof(word) a * _ptr+ @32
+    state sizeof(word) b * _ptr+ @32
+    state sizeof(word) c * _ptr+ @32
+    state sizeof(word) d * _ptr+ @32
 
     qr
 
-    state _@ptr sizeof(word) d @64 * _ptr+ !32
-    state _@ptr sizeof(word) c @64 * _ptr+ !32
-    state _@ptr sizeof(word) b @64 * _ptr+ !32
-  state   _@ptr sizeof(word) a @64 * _ptr+ !32
+    state sizeof(word) d * _ptr+ !32
+    state sizeof(word) c * _ptr+ !32
+    state sizeof(word) b * _ptr+ !32
+    state sizeof(word) a * _ptr+ !32
+  end
 end
 
 proc round_odd
   ptr // &mut State
 in
-  memory state _sizeof(ptr) end state _!ptr
-  0 4  8 12 state _@ptr qr_index // column 1
-  1 5  9 13 state _@ptr qr_index // column 2
-  2 6 10 14 state _@ptr qr_index // column 3
-  3 7 11 15 state _@ptr qr_index // column 4
+  let state in
+    0 4  8 12 state qr_index // column 1
+    1 5  9 13 state qr_index // column 2
+    2 6 10 14 state qr_index // column 3
+    3 7 11 15 state qr_index // column 4
+  end
 end
 
 proc round_even
   ptr // &mut State
 in
-  memory state _sizeof(ptr) end state _!ptr
-  0 5 10 15 state _@ptr qr_index // diagonal 1
-  1 6 11 12 state _@ptr qr_index // diagonal 2
-  2 7  8 13 state _@ptr qr_index // diagonal 3
-  3 4  9 14 state _@ptr qr_index // diagonal 4
+  let state in
+    0 5 10 15 state qr_index // diagonal 1
+    1 6 11 12 state qr_index // diagonal 2
+    2 7  8 13 state qr_index // diagonal 3
+    3 4  9 14 state qr_index // diagonal 4
+  end
 end
 
+// TODO: swap arg order so call looks like `20 state block`
 proc block_no_add
   ptr // &mut State
   int // num_rounds
 in
-  1 while over over >= do
-    dup 1 and 0 = if // if current round is even
-      rot dup round_even
-      rot rot
-    else
-      rot dup round_odd
-      rot rot
-    end
-    1 +
-  end drop
-  drop drop
+  let state rounds in
+    1 while dup rounds <= do
+      dup 1 and 0 = if // if current round is even
+        state round_even
+      else
+        state round_odd
+      end
+      1 +
+    end drop
+  end
 end
 
 // s1 += s2
@@ -300,29 +300,32 @@ proc state+
   ptr // s1: &mut State
   ptr // s2: &State
 in
-  memory s2 _sizeof(ptr) end s2 _!ptr
-  memory s1 _sizeof(ptr) end s1 _!ptr
-  0 while dup sizeof(State) < do
-    s1 _@ptr over _ptr+ @32      // push s1[i]
-    over s2 _@ptr swap _ptr+ @32 // push s2[i]
-    +
-    over s1 _@ptr swap _ptr+ !32 // s1[i] = s1[i] + s2[i]
+  let s1 s2 in
+    0 while dup sizeof(State) < do
+      s1 over _ptr+ @32      // push s1[i]
+      over s2 swap _ptr+ @32 // push s2[i]
+      +
+      over s1 swap _ptr+ !32 // s1[i] = s1[i] + s2[i]
 
-    sizeof(word) +
-  end drop
+      sizeof(word) +
+    end drop
+  end
 end
 
+// TODO: swap arg order so call looks like `20 state block`
 proc block
   ptr // &mut State
   int // num_rounds
 in
-  // make copy of original state
-  memory original sizeof(State) end
-  over sizeof(State) swap original _memcpy drop
+  let state rounds in
+    // make copy of original state
+    memory original sizeof(State) end
+    sizeof(State) state original _memcpy drop
 
-  // compute rounds
-  over over block_no_add
+    // compute rounds
+    state rounds block_no_add
 
-  // add original to current state
-  drop original state+
+    // add original to current state
+    state original state+
+  end
 end
