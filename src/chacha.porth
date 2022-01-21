@@ -241,19 +241,23 @@ proc qr_index
   int int int int // indexes (a, b, c, d)
   ptr // &mut State
 in
-  let a b c d state in
-    state sizeof(word) a * _ptr+ @32
-    state sizeof(word) b * _ptr+ @32
-    state sizeof(word) c * _ptr+ @32
-    state sizeof(word) d * _ptr+ @32
+  memory state _sizeof(ptr) end state _!ptr
+  memory d _sizeof(int) end d !64
+  memory c _sizeof(int) end c !64
+  memory b _sizeof(int) end b !64
+  memory a _sizeof(int) end a !64
 
-    qr
+  state _@ptr sizeof(word) a @64 * _ptr+ @32
+  state _@ptr sizeof(word) b @64 * _ptr+ @32
+  state _@ptr sizeof(word) c @64 * _ptr+ @32
+  state _@ptr sizeof(word) d @64 * _ptr+ @32
 
-    state sizeof(word) d * _ptr+ !32
-    state sizeof(word) c * _ptr+ !32
-    state sizeof(word) b * _ptr+ !32
-    state sizeof(word) a * _ptr+ !32
-  end
+  qr
+
+  state _@ptr sizeof(word) d @64 * _ptr+ !32
+  state _@ptr sizeof(word) c @64 * _ptr+ !32
+  state _@ptr sizeof(word) b @64 * _ptr+ !32
+  state _@ptr sizeof(word) a @64 * _ptr+ !32
 end
 
 proc round_odd
