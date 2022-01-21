@@ -180,7 +180,7 @@ in
   drop
 end
 
-proc @State
+inline proc @State
   ptr // &State
   --
   int int int int int int int int int int int int int int int int // words (0..16)
@@ -193,7 +193,7 @@ in
   end
 end
 
-proc !State
+inline proc !State
   int int int int int int int int int int int int int int int int // words (0..16)
   ptr // &mut State
 in
@@ -260,7 +260,7 @@ in
   state _@ptr sizeof(word) a @64 * _ptr+ !32
 end
 
-proc round_odd
+inline proc round_odd
   ptr // &mut State
 in
   let state in
@@ -271,7 +271,7 @@ in
   end
 end
 
-proc round_even
+inline proc round_even
   ptr // &mut State
 in
   let state in
