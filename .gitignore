@@ -1,4 +1,5 @@
 test
 random-bytes
+chacha20-stream
 
 *.asm

@@ -1,0 +1,29 @@
+include "../src/std.porth"
+include "../src/chacha.porth"
+
+proc main in
+  memory state sizeof(State) end
+  memory init sizeof(State) end
+    CHACHA_CONST[0]
+    CHACHA_CONST[1]
+    CHACHA_CONST[2]
+    CHACHA_CONST[3]
+    0 0 0 0
+    0 0 0 0
+    0 0 0 0
+  init !State
+
+  while true do
+    // copy `init` to `state`
+    sizeof(State) init state memcpy drop
+
+    // compute a 20 round chacha block on `state`
+    20 state block
+
+    // print `state` to stdout
+    sizeof(State) state puts
+
+    // increment counter of `init`
+    init State.counter @32 1 + init State.counter !32
+  end
+end
