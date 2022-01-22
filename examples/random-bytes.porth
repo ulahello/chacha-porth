@@ -1,3 +1,8 @@
+// This example prints random bytes to stdout. It's not a correct
+// implementation of a ChaCha stream because it iteratively mutates the entire
+// state, instead of incrementing the initial state's counter. For an actual
+// ChaCha stream, see `examples/chacha20-stream.porth`.
+
 include "../src/std.porth"
 include "../src/chacha.porth"
 
@@ -13,7 +18,10 @@ proc main in
   state !State
 
   while true do
+    // compute a 20 round chacha block on `state`
     20 state block
+
+    // print `state` to stdout
     sizeof(State) state puts
   end
 end
