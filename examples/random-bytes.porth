@@ -18,8 +18,8 @@ proc main in
   state !State
 
   while true do
-    // compute a 20 round chacha block on `state`
-    20 state block
+    // compute an 8 round chacha block on `state`
+    8 state block
 
     // print `state` to stdout
     sizeof(State) state puts
