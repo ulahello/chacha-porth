@@ -352,6 +352,12 @@ const O_WRONLY 1 end
 const O_RDWR   2 end
 const O_CREAT 64 end
 const O_TRUNC 512 end
+const O_NONBLOCK 2048 end
+
+const F_SETFL 4 end
+const F_GETFL 3 end
+
+const EAGAIN 11 end
 
 const CLOCK_MONOTONIC 1 end
 const TIMER_ABSTIME 1 end
@@ -446,11 +452,23 @@ inline proc fork -- int in SYS_fork syscall0 end
 inline proc getpid -- int in SYS_getpid syscall0 end
 inline proc execve ptr ptr ptr -- int in SYS_execve syscall3 end
 inline proc wait4 ptr int ptr int -- int in SYS_wait4 syscall4 end
+inline proc rename ptr ptr -- int in SYS_rename syscall2 end
+inline proc fcntl int int int -- int in SYS_fcntl syscall3 end
 
-inline proc /   int int -- int in divmod drop end
-inline proc %   int int -- int in divmod swap drop end
-inline proc mod int int -- int in % end
-inline proc div int int -- int in / end
+inline proc /    int int -- int in divmod drop end
+inline proc %    int int -- int in divmod swap drop end
+inline proc mod  int int -- int in % end
+inline proc div  int int -- int in / end
+inline proc imod int int -- int in idivmod swap drop end
+inline proc idiv int int -- int in idivmod drop end
+inline proc emod int int -- int in
+  let a b in
+    a
+    b imod
+    b +
+    b imod
+  end
+end
 
 inline proc nth_argv int -- ptr in
   8 * argv +ptr @64 cast(ptr)
@@ -519,6 +537,29 @@ inline proc fputs int ptr int in write drop end
 inline proc puts int ptr in stdout fputs end
 inline proc eputs int ptr in stderr fputs end
 
+inline proc WIFSTOPPED int -- bool in
+  // (((x) & 0xff) == 0x7f)
+  here eputs ": TODO: WIFSTOPPED is not implemented\n" eputs
+  1 exit
+  cast(bool)
+end
+
+inline proc WIFCONTINUED int -- bool in
+  // ((x) == 0xffff)
+
+  here eputs ": TODO: WIFCONTINUED is not implemented\n" eputs
+  1 exit
+  cast(bool)
+end
+
+inline proc WIFSIGNALED int -- bool in
+  // (((signed char) (((x) & 0x7f) + 1) >> 1) > 0)
+  127 and // 0x7f
+  1 +
+  1 shr
+  0 >
+end
+
 inline proc WIFEXITED int -- bool in
   // (((x) & 0x7f) == 0)
   127 // 0x7f
@@ -560,16 +601,52 @@ inline proc str-chop-one-left ptr in
        Str.data inc64
 end
 
+inline proc str-chop-one-right ptr in
+  Str.count dec64
+end
+
+proc ?space int -- bool in
+       dup ' '  = if  true
+  else dup '\n' = if* true
+  else dup '\r' = if* true
+  else false end
+  swap drop
+end
+
 proc str-trim-left ptr in // input --
   while
     dup @Str.count 0 > if
-      dup @Str.data @8 ' ' =
+      dup @Str.data @8 ?space
     else false end
   do
     dup str-chop-one-left
   end
   drop
 end
+
+proc str-chop-by-predicate
+  addr // predicate
+  ptr // dst
+  ptr // src
+in
+  memory predicate sizeof(addr) end
+  rot predicate !addr
+  over over @Str.data swap !Str.data
+  over 0 swap !Str.count
+  while
+    dup @Str.count 0 > if
+       dup @Str.data @8 predicate @addr call-like ?space lnot
+    else false end
+  do
+    dup str-chop-one-left
+    swap dup Str.count inc64 swap
+  end
+  dup @Str.count 0 > if
+    dup str-chop-one-left
+  end
+  drop drop
+end
+
 
 proc str-chop-by-delim
   int // delim
@@ -626,60 +703,63 @@ inline proc ?str-empty ptr -- bool in
 end
 
 proc streq
-  int ptr int ptr
+  int ptr
+  int ptr
   --
   bool
 in
-  memory a sizeof(Str) end
-  a !Str
-  memory b sizeof(Str) end
-  b !Str
-
-  a @Str.count b @Str.count = if
-    0 while
-      dup a @Str.count < if
-        dup a @Str.data +ptr @8
-        over b @Str.data +ptr @8
-        =
+  while
+    let n1 s1 n2 s2 in
+      n1 s1 n2 s2
+      n1 0 > n2 0 > land if
+        s1 @8 s2 @8 =
       else false end
-    do 1 + end
-    a @Str.count >=
-  else false end
+    end
+  do
+    let n1 s1 n2 s2 in
+      n1 1 -
+      s1 1 ptr+
+      n2 1 -
+      s2 1 ptr+
+    end
+  end
+
+  let n1 _ n2 _ in
+    n1 0 = n2 0 = land
+  end
 end
 
 // TODO: rename isdigit to ?digit
 inline proc isdigit int -- bool in
-  dup
-    '0' >=
-  swap
-    '9' <=
-  land
+  let x in
+    x '0' >=
+    x '9' <=
+    land
+  end
 end
 
 // TODO: rename isalpha to ?alpha
 inline proc isalpha int -- bool in
-  dup
-    dup
-      'a' >=
-    swap
-      'z' <=
+  let x in
+    x 'a' >=
+    x 'z' <=
     land
-  swap
-    dup
-      'A' >=
-    swap
-      'Z' <=
+
+    x 'A' >=
+    x 'Z' <=
     land
-  lor
+
+    lor
+  end
 end
 
 // TODO: rename isalnum to ?alnum
 inline proc isalnum int -- bool in
-  dup
-    isdigit
-  swap
-    isalpha
-  lor
+  let x in
+    x isdigit
+    x isalpha
+    lor
+  end
 end
 
 proc try-parse-int
@@ -1219,8 +1299,14 @@ in
   memory path sizeof(Str) end
   path !Str
 
-  path @Str '/' str-rfind dup 0 < if drop 0 end
+  path @Str '/' str-rfind 1 +
   path !Str.count
+
+  path ?str-empty if
+    "." path !Str
+  else path @Str "/" streq lnot if*
+    path str-chop-one-right
+  end
 
   path @Str
 end
@@ -1292,25 +1378,43 @@ in
   else dup 0 > if*
     // parent process
     drop drop
-    NULL
-    0
-    wstatus
-    0 1 - // TODO: replace this with -1 when we support negative numbers
-    wait4 0 < if
-      "[ERROR] could not wait until the child process has finished executing\n" eputs
-      1 exit
-    end
 
-    wstatus @int
-      dup WIFEXITED if
-        dup WEXITSTATUS
-          dup 0 > if
-            dup exit
-          end
-        drop
+    while
+      NULL
+      0
+      wstatus
+      0 1 - // TODO: replace this with -1 when we support negative numbers
+      wait4 0 < if
+        "[ERROR] could not wait until the child process has finished executing\n" eputs
+        1 exit
       end
-    drop
 
+      wstatus @int
+        dup WIFEXITED if
+          dup WEXITSTATUS
+            dup 0 > if
+              dup exit
+            end
+          drop
+
+          false // break
+        else dup WIFSIGNALED if*
+          // TODO: print the signal that terminated the child
+          "ERROR: the child process was terminated by a signal\n" eputs
+          255 exit
+
+          false // break
+        else dup WIFSTOPPED if*
+          true  // continue
+        else dup WIFCONTINUED if*
+          true  // continue
+        else
+          here eputs ": unreachable\n" eputs
+          1 exit
+          false // break
+        end
+      swap drop
+    do end
   else
     drop drop
     "[ERROR] could not fork a child\n" eputs
