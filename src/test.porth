@@ -26,6 +26,43 @@ proc test_utils in
   "[test_utils] passed\n" puts
 end
 
+proc test_const in
+  memory str sizeof(ptr) end
+    "expand 32-byte k" swap drop
+  str !ptr
+
+  str @ptr sizeof(word) 0 * ptr+ @32
+  str @ptr sizeof(word) 1 * ptr+ @32
+  str @ptr sizeof(word) 2 * ptr+ @32
+  str @ptr sizeof(word) 3 * ptr+ @32
+
+  dup CHACHA_CONST[3] != if
+    "[test_const] CHACHA_CONST[3]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup CHACHA_CONST[2] != if
+    "[test_const] CHACHA_CONST[2]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup CHACHA_CONST[1] != if
+    "[test_const] CHACHA_CONST[1]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  dup CHACHA_CONST[0] != if
+    "[test_const] CHACHA_CONST[0]: unexpected " puts putu "\n" puts
+    1 exit
+    else drop
+  end
+
+  "[test_const] passed\n" puts
+end
+
 proc test_2.1.1 in
   286331153  // a = 0x11111111
   16909060   // b = 0x01020304
@@ -466,6 +503,7 @@ end
 
 proc main in
   test_utils
+  test_const
   test_2.1.1
   test_2.2.1
   test_2.3.2
