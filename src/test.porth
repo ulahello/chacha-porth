@@ -27,37 +27,34 @@ proc test_utils in
 end
 
 proc test_const in
-  memory str sizeof(ptr) end
-    "expand 32-byte k" swap drop
-  str !ptr
-
-  str @ptr sizeof(word) 0 * ptr+ @32
-  str @ptr sizeof(word) 1 * ptr+ @32
-  str @ptr sizeof(word) 2 * ptr+ @32
-  str @ptr sizeof(word) 3 * ptr+ @32
-
-  dup CHACHA_CONST[3] != if
-    "[test_const] CHACHA_CONST[3]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
+  "expand 32-byte k"
+  let _ ptr in
+    ptr sizeof(word) 0 * ptr+ @32
+    ptr sizeof(word) 1 * ptr+ @32
+    ptr sizeof(word) 2 * ptr+ @32
+    ptr sizeof(word) 3 * ptr+ @32
   end
 
-  dup CHACHA_CONST[2] != if
-    "[test_const] CHACHA_CONST[2]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+  let a b c d in
+    a CHACHA_CONST[0] != if
+      "[test_const] CHACHA_CONST[0]: unexpected " puts a putu "\n" puts
+      1 exit
+    end
 
-  dup CHACHA_CONST[1] != if
-    "[test_const] CHACHA_CONST[1]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    b CHACHA_CONST[1] != if
+      "[test_const] CHACHA_CONST[1]: unexpected " puts b putu "\n" puts
+      1 exit
+    end
 
-  dup CHACHA_CONST[0] != if
-    "[test_const] CHACHA_CONST[0]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
+    c CHACHA_CONST[2] != if
+      "[test_const] CHACHA_CONST[2]: unexpected " puts c putu "\n" puts
+      1 exit
+    end
+
+    d CHACHA_CONST[3] != if
+      "[test_const] CHACHA_CONST[3]: unexpected " puts d putu "\n" puts
+      1 exit
+    end
   end
 
   "[test_const] passed\n" puts
@@ -70,28 +67,26 @@ proc test_2.1.1 in
   19088743   // d = 0x01234567
   qr
 
-  dup 1484899515 != if // assert d == 0x5881c4bb
-    "[2.1.1] d: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+  let a b c d in
+    a 3928658676 != if // assert a == 0xea2a92f4
+      "[2.1.1] a: unexpected " puts a putu "\n" puts
+      1 exit
+    end
 
-  dup 1166100270 != if // assert c == 0x4581472e
-    "[2.1.1] c: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    b 3407673550 != if // assert b == 0xcb1cf8ce
+      "[2.1.1] b: unexpected " puts b putu "\n" puts
+      1 exit
+    end
 
-  dup 3407673550 != if // assert b == 0xcb1cf8ce
-    "[2.1.1] b: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    c 1166100270 != if // assert c == 0x4581472e
+      "[2.1.1] c: unexpected " puts c putu "\n" puts
+      1 exit
+    end
 
-  dup 3928658676 != if // assert a == 0xea2a92f4
-    "[2.1.1] a: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
+    d 1484899515 != if // assert d == 0x5881c4bb
+      "[2.1.1] d: unexpected " puts d putu "\n" puts
+      1 exit
+    end
   end
 
   "[2.1.1] passed\n" puts
@@ -120,137 +115,122 @@ proc test_2.2.1 in
   // compute quarter round with indexes
   2 7 8 13 state qr_index
 
-  // push d, c, b, a to stack
-  state sizeof(word) 13 * ptr+ @32
-  state sizeof(word)  8 * ptr+ @32
-  state sizeof(word)  7 * ptr+ @32
+  // push a, b, c, d to stack
   state sizeof(word)  2 * ptr+ @32
+  state sizeof(word)  7 * ptr+ @32
+  state sizeof(word)  8 * ptr+ @32
+  state sizeof(word) 13 * ptr+ @32
 
-  dup 3182986972 != if // assert a == 0xbdb886dc
-    "[2.2.1] a: unexpected: " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+  let a b c d in
+    a 3182986972 != if // assert a == 0xbdb886dc
+      "[2.2.1] a: unexpected: " puts a putu "\n" puts
+      1 exit
+    end
 
-  dup 3484200914 != if // assert b == 0xcfacafd2
-    "[2.2.1] b: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    b 3484200914 != if // assert b == 0xcfacafd2
+      "[2.2.1] b: unexpected " puts b putu "\n" puts
+      1 exit
+    end
 
-  dup 3832277632 != if // assert c == 0xe46bea80
-    "[2.2.1] c: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    c 3832277632 != if // assert c == 0xe46bea80
+      "[2.2.1] c: unexpected " puts c putu "\n" puts
+      1 exit
+    end
 
-  dup 3435166841 != if // assert d == 0xccc07c79
-    "[2.2.1] d: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
+    d 3435166841 != if // assert d == 0xccc07c79
+      "[2.2.1] d: unexpected " puts d putu "\n" puts
+      1 exit
+    end
   end
 
   "[2.2.1] passed\n" puts
 end
 
+// these test checks are repeated code, maybe abstract with a function that compares an expected vs actual state?
 proc test_2.3.2_check1
   int int int int int int int int int int int int int int int int
   --
 in
-  dup 1312575650 != if // 0x4e3c50a2
-    "[2.3.2] after 20 rounds [15]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+  let a b c d e f g h i j k l m n o p in
+    a 2205644971 != if // 0x837778ab
+      "[2.3.2] after 20 rounds [0]: unexpected " puts a putu "\n" puts
+      1 exit
+    end
 
-  dup 2659438795 != if // 0x9e83d0cb
-    "[2.3.2] after 20 rounds [14]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    b 3795375971 != if // 0xe238d763
+      "[2.3.2] after 20 rounds [1]: unexpected " puts b putu "\n" puts
+      1 exit
+    end
 
-  dup 2957907678 != if // 0xb04e16de
-    "[2.3.2] after 20 rounds [13]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    c 2793071134 != if // 0xa67ae21e
+      "[2.3.2] after 20 rounds [2]: unexpected " puts c putu "\n" puts
+      1 exit
+    end
 
-  dup 3516666548 != if // 0xd19c12b4
-    "[2.3.2] after 20 rounds [12]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    d 1498463023 != if // 0x5950bb2f
+      "[2.3.2] after 20 rounds [3]: unexpected " puts d putu "\n" puts
+      1 exit
+    end
 
-  dup 2196008637 != if // 0x82e46ebd
-    "[2.3.2] after 20 rounds [11]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    e 3304247495 != if // 0xc4f2d0c7
+      "[2.3.2] after 20 rounds [4]: unexpected " puts e putu "\n" puts
+      1 exit
+    end
 
-  dup 3938298108 != if // 0xeabda8fc
-    "[2.3.2] after 20 rounds [10]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    f 4234328879 != if // 0xfc62bb2f
+      "[2.3.2] after 20 rounds [5]: unexpected " puts f putu "\n" puts
+      1 exit
+    end
 
-  dup 4069820915 != if // 0xf29489f3
-    "[2.3.2] after 20 rounds [9]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    g 2409634044 != if // 0x8fa018fc
+      "[2.3.2] after 20 rounds [6]: unexpected " puts g putu "\n" puts
+      1 exit
+    end
 
-  dup 861041090  != if // 0x335271c2
-    "[2.3.2] after 20 rounds [8]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    h 1063176119 != if // 0x3f5ec7b7
+      "[2.3.2] after 20 rounds [7]: unexpected " puts h putu "\n" puts
+      1 exit
+    end
 
-  dup 1063176119 != if // 0x3f5ec7b7
-    "[2.3.2] after 20 rounds [7]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    i 861041090  != if // 0x335271c2
+      "[2.3.2] after 20 rounds [8]: unexpected " puts i putu "\n" puts
+      1 exit
+    end
 
-  dup 2409634044 != if // 0x8fa018fc
-    "[2.3.2] after 20 rounds [6]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    j 4069820915 != if // 0xf29489f3
+      "[2.3.2] after 20 rounds [9]: unexpected " puts j putu "\n" puts
+      1 exit
+    end
 
-  dup 4234328879 != if // 0xfc62bb2f
-    "[2.3.2] after 20 rounds [5]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    k 3938298108 != if // 0xeabda8fc
+      "[2.3.2] after 20 rounds [10]: unexpected " puts k putu "\n" puts
+      1 exit
+    end
 
-  dup 3304247495 != if // 0xc4f2d0c7
-    "[2.3.2] after 20 rounds [4]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    l 2196008637 != if // 0x82e46ebd
+      "[2.3.2] after 20 rounds [11]: unexpected " puts l putu "\n" puts
+      1 exit
+    end
 
-  dup 1498463023 != if // 0x5950bb2f
-    "[2.3.2] after 20 rounds [3]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    m 3516666548 != if // 0xd19c12b4
+      "[2.3.2] after 20 rounds [12]: unexpected " puts m putu "\n" puts
+      1 exit
+    end
 
-  dup 2793071134 != if // 0xa67ae21e
-    "[2.3.2] after 20 rounds [2]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    n 2957907678 != if // 0xb04e16de
+      "[2.3.2] after 20 rounds [13]: unexpected " puts n putu "\n" puts
+      1 exit
+    end
 
-  dup 3795375971 != if // 0xe238d763
-    "[2.3.2] after 20 rounds [1]: unexpected " puts putu "\n" puts
-    1 exit
-   else drop
-  end
+    o 2659438795 != if // 0x9e83d0cb
+      "[2.3.2] after 20 rounds [14]: unexpected " puts o putu "\n" puts
+      1 exit
+    end
 
-  dup 2205644971 != if // 0x837778ab
-    "[2.3.2] after 20 rounds [0]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
+    p 1312575650 != if // 0x4e3c50a2
+      "[2.3.2] after 20 rounds [15]: unexpected " puts p putu "\n" puts
+      1 exit
+    end
   end
 end
 
@@ -258,100 +238,86 @@ proc test_2.3.2_check2
   int int int int int int int int int int int int int int int int
   --
 in
-  dup 1312575650 != if // 0x4e3c50a2
-    "[2.3.2] after adding original state [15]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+  let a b c d e f g h i j k l m n o p in
+    a 3840405776 != if // 0xe4e7f110
+      "[2.3.2] after adding original state [0]: unexpected " puts a putu "\n" puts
+      1 exit
+    end
 
-  dup 3900952779 != if // 0xe883d0cb
-    "[2.3.2] after adding original state [14]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    b 358169553 != if // 0x15593bd1
+      "[2.3.2] after adding original state [1]: unexpected " puts b putu "\n" puts
+      1 exit
+    end
 
-  dup 3108902622 != if // 0xb94e16de
-    "[2.3.2] after adding original state [13]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    c 534581072 != if // 0x1fdd0f50
+      "[2.3.2] after adding original state [2]: unexpected " puts c putu "\n" puts
+      1 exit
+    end
 
-  dup 3516666549 != if // 0xd19c12b5
-    "[2.3.2] after adding original state [12]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    d 3295748259 != if // 0xc47120a3
+      "[2.3.2] after adding original state [3]: unexpected " puts d putu "\n" puts
+      1 exit
+    end
 
-  dup 2718075865 != if // 0xa2028bd9
-    "[2.3.2] after adding original state [11]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    e 3354710471 != if // 0xc7f4d1c7
+      "[2.3.2] after adding original state [4]: unexpected " puts e putu "\n" puts
+      1 exit
+    end
 
-  dup 98026004 != if // 0x05d7c214
-    "[2.3.2] after adding original state [10]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    f 57196595 != if // 0x0368c033
+      "[2.3.2] after adding original state [5]: unexpected " puts f putu "\n" puts
+      1 exit
+    end
 
-  dup 162176775 != if // 0x09aa9f07
-    "[2.3.2] after adding original state [9]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    g 2594841092 != if // 0x9aaa2204
+      "[2.3.2] after adding original state [6]: unexpected " puts g putu "\n" puts
+      1 exit
+    end
 
-  dup 1180992210 != if // 0x466482d2
-    "[2.3.2] after adding original state [8]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    h 1315755203 != if // 0x4e6cd4c3
+      "[2.3.2] after adding original state [7]: unexpected " puts h putu "\n" puts
+      1 exit
+    end
 
-  dup 1315755203 != if // 0x4e6cd4c3
-    "[2.3.2] after adding original state [7]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    i 1180992210 != if // 0x466482d2
+      "[2.3.2] after adding original state [8]: unexpected " puts i putu "\n" puts
+      1 exit
+    end
 
-  dup 2594841092 != if // 0x9aaa2204
-    "[2.3.2] after adding original state [6]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    j 162176775 != if // 0x09aa9f07
+      "[2.3.2] after adding original state [9]: unexpected " puts j putu "\n" puts
+      1 exit
+    end
 
-  dup 57196595 != if // 0x0368c033
-    "[2.3.2] after adding original state [5]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    k 98026004 != if // 0x05d7c214
+      "[2.3.2] after adding original state [10]: unexpected " puts k putu "\n" puts
+      1 exit
+    end
 
-  dup 3354710471 != if // 0xc7f4d1c7
-    "[2.3.2] after adding original state [4]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    l 2718075865 != if // 0xa2028bd9
+      "[2.3.2] after adding original state [11]: unexpected " puts l putu "\n" puts
+      1 exit
+    end
 
-  dup 3295748259 != if // 0xc47120a3
-    "[2.3.2] after adding original state [3]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    m 3516666549 != if // 0xd19c12b5
+      "[2.3.2] after adding original state [12]: unexpected " puts m putu "\n" puts
+      1 exit
+    end
 
-  dup 534581072 != if // 0x1fdd0f50
-    "[2.3.2] after adding original state [2]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    n 3108902622 != if // 0xb94e16de
+      "[2.3.2] after adding original state [13]: unexpected " puts n putu "\n" puts
+      1 exit
+    end
 
-  dup 358169553 != if // 0x15593bd1
-    "[2.3.2] after adding original state [1]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    o 3900952779 != if // 0xe883d0cb
+      "[2.3.2] after adding original state [14]: unexpected " puts o putu "\n" puts
+      1 exit
+    end
 
-  dup 3840405776 != if // 0xe4e7f110
-    "[2.3.2] after adding original state [0]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
+    p 1312575650 != if // 0x4e3c50a2
+      "[2.3.2] after adding original state [15]: unexpected " puts p putu "\n" puts
+      1 exit
+    end
   end
 end
 
@@ -359,100 +325,86 @@ proc test_2.3.2_check3
   int int int int int int int int int int int int int int int int
   --
 in
-  dup 1312575650 != if // 0x4e3c50a2
-    "[2.3.2] after full 20 round block [15]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+  let a b c d e f g h i j k l m n o p in
+    a 3840405776 != if // 0xe4e7f110
+      "[2.3.2] after full 20 round block [0]: unexpected " puts a putu "\n" puts
+      1 exit
+    end
 
-  dup 3900952779 != if // 0xe883d0cb
-    "[2.3.2] after full 20 round block [14]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    b 358169553 != if // 0x15593bd1
+      "[2.3.2] after full 20 round block [1]: unexpected " puts b putu "\n" puts
+      1 exit
+    end
 
-  dup 3108902622 != if // 0xb94e16de
-    "[2.3.2] after full 20 round block [13]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    c 534581072 != if // 0x1fdd0f50
+      "[2.3.2] after full 20 round block [2]: unexpected " puts c putu "\n" puts
+      1 exit
+    end
 
-  dup 3516666549 != if // 0xd19c12b5
-    "[2.3.2] after full 20 round block [12]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    d 3295748259 != if // 0xc47120a3
+      "[2.3.2] after full 20 round block [3]: unexpected " puts d putu "\n" puts
+      1 exit
+    end
 
-  dup 2718075865 != if // 0xa2028bd9
-    "[2.3.2] after full 20 round block [11]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    e 3354710471 != if // 0xc7f4d1c7
+      "[2.3.2] after full 20 round block [4]: unexpected " puts e putu "\n" puts
+      1 exit
+    end
 
-  dup 98026004 != if // 0x05d7c214
-    "[2.3.2] after full 20 round block [10]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    f 57196595 != if // 0x0368c033
+      "[2.3.2] after full 20 round block [5]: unexpected " puts f putu "\n" puts
+      1 exit
+    end
 
-  dup 162176775 != if // 0x09aa9f07
-    "[2.3.2] after full 20 round block [9]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    g 2594841092 != if // 0x9aaa2204
+      "[2.3.2] after full 20 round block [6]: unexpected " puts g putu "\n" puts
+      1 exit
+    end
 
-  dup 1180992210 != if // 0x466482d2
-    "[2.3.2] after full 20 round block [8]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    h 1315755203 != if // 0x4e6cd4c3
+      "[2.3.2] after full 20 round block [7]: unexpected " puts h putu "\n" puts
+      1 exit
+    end
 
-  dup 1315755203 != if // 0x4e6cd4c3
-    "[2.3.2] after full 20 round block [7]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    i 1180992210 != if // 0x466482d2
+      "[2.3.2] after full 20 round block [8]: unexpected " puts i putu "\n" puts
+      1 exit
+    end
 
-  dup 2594841092 != if // 0x9aaa2204
-    "[2.3.2] after full 20 round block [6]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    j 162176775 != if // 0x09aa9f07
+      "[2.3.2] after full 20 round block [9]: unexpected " puts j putu "\n" puts
+      1 exit
+    end
 
-  dup 57196595 != if // 0x0368c033
-    "[2.3.2] after full 20 round block [5]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    k 98026004 != if // 0x05d7c214
+      "[2.3.2] after full 20 round block [10]: unexpected " puts k putu "\n" puts
+      1 exit
+    end
 
-  dup 3354710471 != if // 0xc7f4d1c7
-    "[2.3.2] after full 20 round block [4]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    l 2718075865 != if // 0xa2028bd9
+      "[2.3.2] after full 20 round block [11]: unexpected " puts l putu "\n" puts
+      1 exit
+    end
 
-  dup 3295748259 != if // 0xc47120a3
-    "[2.3.2] after full 20 round block [3]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    m 3516666549 != if // 0xd19c12b5
+      "[2.3.2] after full 20 round block [12]: unexpected " puts m putu "\n" puts
+      1 exit
+    end
 
-  dup 534581072 != if // 0x1fdd0f50
-    "[2.3.2] after full 20 round block [2]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    n 3108902622 != if // 0xb94e16de
+      "[2.3.2] after full 20 round block [13]: unexpected " puts n putu "\n" puts
+      1 exit
+    end
 
-  dup 358169553 != if // 0x15593bd1
-    "[2.3.2] after full 20 round block [1]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
-  end
+    o 3900952779 != if // 0xe883d0cb
+      "[2.3.2] after full 20 round block [14]: unexpected " puts o putu "\n" puts
+      1 exit
+    end
 
-  dup 3840405776 != if // 0xe4e7f110
-    "[2.3.2] after full 20 round block [0]: unexpected " puts putu "\n" puts
-    1 exit
-    else drop
+    p 1312575650 != if // 0x4e3c50a2
+      "[2.3.2] after full 20 round block [15]: unexpected " puts p putu "\n" puts
+      1 exit
+    end
   end
 end
 
