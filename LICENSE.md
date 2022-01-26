@@ -1,4 +1,4 @@
-The [Porth standard library](./src/std.porth) is licensed under the MIT license.
+The [Porth standard library](./std/std.porth) is licensed under the MIT license.
 The copyright is owned by Alexey Kutepov.
 
 The terms for distributing [RFC 7539](./res/chacha-rfc7539.txt) are found in
