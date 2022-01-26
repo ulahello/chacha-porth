@@ -3,8 +3,8 @@
 // state, instead of incrementing the initial state's counter. For an actual
 // ChaCha stream, see `examples/chacha20-stream.porth`.
 
-include "../src/std.porth"
-include "../src/chacha.porth"
+include "std.porth"
+include "src/chacha.porth"
 
 proc main in
   memory state sizeof(State) end

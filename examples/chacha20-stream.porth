@@ -1,5 +1,5 @@
-include "../src/std.porth"
-include "../src/chacha.porth"
+include "std.porth"
+include "src/chacha.porth"
 
 proc main in
   memory state sizeof(State) end
