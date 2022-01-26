@@ -4,9 +4,9 @@ include "std.porth"
 // - const sizeof(ptr)
 // - proc  @ptr
 // - proc  !ptr
-// - proc  inc64
 // - proc  ptr+
 // - proc  memcpy
+//   - proc  inc64
 
 const sizeof(word) 4 end
 

@@ -13,8 +13,8 @@ generation.
 ### As a library
 
 This is intended for developers. If you want to use ChaCha, include
-[chacha.porth](./src/chacha.porth). It doesn't have any explicit dependencies
-(it copypastes some std.porth procs with different namespaces).
+[chacha.porth](./src/chacha.porth). It depends on a few memory-related procs
+from the standard library.
 
 For an example of the library's usage, see [the examples](./examples).
 
