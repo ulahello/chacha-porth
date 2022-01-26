@@ -1,40 +1,12 @@
-/// BEGIN std.porth copypaste + rename ; MIT license, src by Alexey Kutepov ////
-const _sizeof(int) 8 end
-const _sizeof(ptr) _sizeof(int) end
-
-inline proc _@ptr ptr -- ptr in @64 cast(ptr) end
-inline proc _!ptr ptr ptr in !64 end
-inline proc _inc64 ptr in dup @64 1 + swap !64 end
-
-inline proc _ptr+ ptr int -- ptr in
-  swap cast(int)
-  swap cast(int)
-  +
-  cast(ptr)
-end
-
-proc _memcpy
-  int // size
-  ptr // src
-  ptr // dst
-  --
-  ptr // dst
-in
-  memory src _sizeof(ptr) end
-  memory dst _sizeof(ptr) end
-  memory result _sizeof(ptr) end
-  dst !64
-  src !64
-  dst _@ptr swap // result
-  while dup 0 > do
-    src _@ptr @8
-    dst _@ptr !8
-    src _inc64
-    dst _inc64
-    1 -
-  end drop
-end
-/// END std.porth copypaste ////////////////////////////////////////////////////
+include "std.porth"
+// NOTE: depends on these std items
+// - const sizeof(int)
+// - const sizeof(ptr)
+// - proc  @ptr
+// - proc  !ptr
+// - proc  inc64
+// - proc  ptr+
+// - proc  memcpy
 
 const sizeof(word) 4 end
 
@@ -82,10 +54,10 @@ const offsetof(State.counter) sizeof(State.counter) offset end
 const offsetof(State.nonce)   sizeof(State.nonce)   offset end
 const sizeof(State)                                  reset end
 
-inline proc State.const    ptr -- ptr in offsetof(State.const)   _ptr+ end
-inline proc State.key      ptr -- ptr in offsetof(State.key)     _ptr+ end
-inline proc State.counter  ptr -- ptr in offsetof(State.counter) _ptr+ end
-inline proc State.nonce    ptr -- ptr in offsetof(State.nonce)   _ptr+ end
+inline proc State.const    ptr -- ptr in offsetof(State.const)   ptr+ end
+inline proc State.key      ptr -- ptr in offsetof(State.key)     ptr+ end
+inline proc State.counter  ptr -- ptr in offsetof(State.counter) ptr+ end
+inline proc State.nonce    ptr -- ptr in offsetof(State.nonce)   ptr+ end
 
 inline proc @State.const
   ptr // &State
@@ -93,10 +65,10 @@ inline proc @State.const
   int int int int // words (0..4)
 in
   State.const
-  dup sizeof(word) 0 * _ptr+ @32 swap
-  dup sizeof(word) 1 * _ptr+ @32 swap
-  dup sizeof(word) 2 * _ptr+ @32 swap
-      sizeof(word) 3 * _ptr+ @32
+  dup sizeof(word) 0 * ptr+ @32 swap
+  dup sizeof(word) 1 * ptr+ @32 swap
+  dup sizeof(word) 2 * ptr+ @32 swap
+      sizeof(word) 3 * ptr+ @32
 end
 
 inline proc @State.key
@@ -105,14 +77,14 @@ inline proc @State.key
   int int int int int int int int // words (4..11)
 in
   State.key
-  dup sizeof(word) 0 * _ptr+ @32 swap
-  dup sizeof(word) 1 * _ptr+ @32 swap
-  dup sizeof(word) 2 * _ptr+ @32 swap
-  dup sizeof(word) 3 * _ptr+ @32 swap
-  dup sizeof(word) 4 * _ptr+ @32 swap
-  dup sizeof(word) 5 * _ptr+ @32 swap
-  dup sizeof(word) 6 * _ptr+ @32 swap
-      sizeof(word) 7 * _ptr+ @32
+  dup sizeof(word) 0 * ptr+ @32 swap
+  dup sizeof(word) 1 * ptr+ @32 swap
+  dup sizeof(word) 2 * ptr+ @32 swap
+  dup sizeof(word) 3 * ptr+ @32 swap
+  dup sizeof(word) 4 * ptr+ @32 swap
+  dup sizeof(word) 5 * ptr+ @32 swap
+  dup sizeof(word) 6 * ptr+ @32 swap
+      sizeof(word) 7 * ptr+ @32
 end
 
 inline proc @State.counter
@@ -129,9 +101,9 @@ inline proc @State.nonce
   int int int // words (13..16)
 in
   State.nonce
-  dup sizeof(word) 0 * _ptr+ @32 swap
-  dup sizeof(word) 1 * _ptr+ @32 swap
-      sizeof(word) 2 * _ptr+ @32
+  dup sizeof(word) 0 * ptr+ @32 swap
+  dup sizeof(word) 1 * ptr+ @32 swap
+      sizeof(word) 2 * ptr+ @32
 end
 
 inline proc !State.const
@@ -139,10 +111,10 @@ inline proc !State.const
   ptr // &mut State
 in
   State.const
-  dup sizeof(word) 3 * _ptr+ rot swap !32
-  dup sizeof(word) 2 * _ptr+ rot swap !32
-  dup sizeof(word) 1 * _ptr+ rot swap !32
-  dup sizeof(word) 0 * _ptr+ rot swap !32
+  dup sizeof(word) 3 * ptr+ rot swap !32
+  dup sizeof(word) 2 * ptr+ rot swap !32
+  dup sizeof(word) 1 * ptr+ rot swap !32
+  dup sizeof(word) 0 * ptr+ rot swap !32
   drop
 end
 
@@ -151,14 +123,14 @@ inline proc !State.key
   ptr // &mut State
 in
   State.key
-  dup sizeof(word) 7 * _ptr+ rot swap !32
-  dup sizeof(word) 6 * _ptr+ rot swap !32
-  dup sizeof(word) 5 * _ptr+ rot swap !32
-  dup sizeof(word) 4 * _ptr+ rot swap !32
-  dup sizeof(word) 3 * _ptr+ rot swap !32
-  dup sizeof(word) 2 * _ptr+ rot swap !32
-  dup sizeof(word) 1 * _ptr+ rot swap !32
-  dup sizeof(word) 0 * _ptr+ rot swap !32
+  dup sizeof(word) 7 * ptr+ rot swap !32
+  dup sizeof(word) 6 * ptr+ rot swap !32
+  dup sizeof(word) 5 * ptr+ rot swap !32
+  dup sizeof(word) 4 * ptr+ rot swap !32
+  dup sizeof(word) 3 * ptr+ rot swap !32
+  dup sizeof(word) 2 * ptr+ rot swap !32
+  dup sizeof(word) 1 * ptr+ rot swap !32
+  dup sizeof(word) 0 * ptr+ rot swap !32
   drop
 end
 
@@ -174,9 +146,9 @@ inline proc !State.nonce
   ptr // &mut State
 in
   State.nonce
-  dup sizeof(word) 2 * _ptr+ rot swap !32
-  dup sizeof(word) 1 * _ptr+ rot swap !32
-  dup sizeof(word) 0 * _ptr+ rot swap !32
+  dup sizeof(word) 2 * ptr+ rot swap !32
+  dup sizeof(word) 1 * ptr+ rot swap !32
+  dup sizeof(word) 0 * ptr+ rot swap !32
   drop
 end
 
@@ -241,23 +213,23 @@ proc qr_index
   int int int int // indexes (a, b, c, d)
   ptr // &mut State
 in
-  memory state _sizeof(ptr) end state _!ptr
-  memory d _sizeof(int) end d !64
-  memory c _sizeof(int) end c !64
-  memory b _sizeof(int) end b !64
-  memory a _sizeof(int) end a !64
+  memory state sizeof(ptr) end state !ptr
+  memory d sizeof(int) end d !64
+  memory c sizeof(int) end c !64
+  memory b sizeof(int) end b !64
+  memory a sizeof(int) end a !64
 
-  state _@ptr sizeof(word) a @64 * _ptr+ @32
-  state _@ptr sizeof(word) b @64 * _ptr+ @32
-  state _@ptr sizeof(word) c @64 * _ptr+ @32
-  state _@ptr sizeof(word) d @64 * _ptr+ @32
+  state @ptr sizeof(word) a @64 * ptr+ @32
+  state @ptr sizeof(word) b @64 * ptr+ @32
+  state @ptr sizeof(word) c @64 * ptr+ @32
+  state @ptr sizeof(word) d @64 * ptr+ @32
 
   qr
 
-  state _@ptr sizeof(word) d @64 * _ptr+ !32
-  state _@ptr sizeof(word) c @64 * _ptr+ !32
-  state _@ptr sizeof(word) b @64 * _ptr+ !32
-  state _@ptr sizeof(word) a @64 * _ptr+ !32
+  state @ptr sizeof(word) d @64 * ptr+ !32
+  state @ptr sizeof(word) c @64 * ptr+ !32
+  state @ptr sizeof(word) b @64 * ptr+ !32
+  state @ptr sizeof(word) a @64 * ptr+ !32
 end
 
 inline proc round_odd
@@ -305,10 +277,10 @@ proc state+
 in
   let s1 s2 in
     0 while dup sizeof(State) < do
-      s1 over _ptr+ @32      // push s1[i]
-      over s2 swap _ptr+ @32 // push s2[i]
+      s1 over ptr+ @32      // push s1[i]
+      over s2 swap ptr+ @32 // push s2[i]
       +
-      over s1 swap _ptr+ !32 // s1[i] = s1[i] + s2[i]
+      over s1 swap ptr+ !32 // s1[i] = s1[i] + s2[i]
 
       sizeof(word) +
     end drop
@@ -322,7 +294,7 @@ in
   let rounds state in
     // make copy of original state
     memory original sizeof(State) end
-    sizeof(State) state original _memcpy drop
+    sizeof(State) state original memcpy drop
 
     // compute rounds
     rounds state block_no_add
