@@ -367,6 +367,8 @@ const MAP_ANONYMOUS 32 end
 const PROT_READ 1 end
 const PROT_WRITE 2 end
 
+const SIGQUIT 3 end
+
 const timespec.tv_sec  sizeof(int) offset end
 const timespec.tv_nsec sizeof(int) offset end
 const sizeof(timespec) reset end
@@ -454,6 +456,9 @@ inline proc execve ptr ptr ptr -- int in SYS_execve syscall3 end
 inline proc wait4 ptr int ptr int -- int in SYS_wait4 syscall4 end
 inline proc rename ptr ptr -- int in SYS_rename syscall2 end
 inline proc fcntl int int int -- int in SYS_fcntl syscall3 end
+inline proc kill int int -- int in SYS_kill syscall2 end
+// TODO: possible confusion with `dup` intrinsic
+inline proc dup2 int int -- int in SYS_dup2 syscall2 end
 
 inline proc /    int int -- int in divmod drop end
 inline proc %    int int -- int in divmod swap drop end
@@ -471,11 +476,13 @@ inline proc emod int int -- int in
 end
 
 inline proc nth_argv int -- ptr in
-  8 * argv +ptr @64 cast(ptr)
+  sizeof(ptr) *
+  argv +ptr
+  @ptr cast(ptr)
 end
 
 inline proc lnot bool -- bool in
-  cast(int) 1 - cast(bool)
+  cast(int) 1 swap - cast(bool)
 end
 
 inline proc land bool bool -- bool in
@@ -501,12 +508,12 @@ inline proc inc8 ptr in dup @8 1 + swap !8 end
 inline proc dec8 ptr in dup @8 1 - swap !8 end
 
 proc swap64 ptr ptr in
-  memory a sizeof(u64) end
-  memory b sizeof(u64) end
-  dup  @64 b !64
-  over @64 a !64
-  a @64 swap !64
-  b @64 swap !64
+  let a b in
+    a @64
+    b @64
+    a !64
+    b !64
+  end
 end
 
 proc cstrlen ptr -- int in
@@ -517,17 +524,23 @@ end
 
 proc cstreq ptr ptr -- bool in
   while
-    over @8 0 != over @8 0 != land if
-       over @8 over @8 =
-    else
-       false
+    peek s1 s2 in
+      s1 @8 0 != s2 @8 0 != land if
+         s1 @8 s2 @8 =
+      else false end
     end
   do
-    1 ptr+ swap 1 ptr+
+    let s1 s2 in
+      s1 1 ptr+
+      s2 1 ptr+
+    end
   end
-  @8 0 =
-  swap @8 0 =
-  land
+
+  let s1 s2 in
+    s1 @8 0 =
+    s2 @8 0 =
+    land
+  end
 end
 
 inline proc cstr-to-str ptr -- int ptr in dup cstrlen swap end
@@ -539,17 +552,13 @@ inline proc eputs int ptr in stderr fputs end
 
 inline proc WIFSTOPPED int -- bool in
   // (((x) & 0xff) == 0x7f)
-  here eputs ": TODO: WIFSTOPPED is not implemented\n" eputs
-  1 exit
-  cast(bool)
+  255 and // 0xff
+  127 = // 0x7f
 end
 
 inline proc WIFCONTINUED int -- bool in
   // ((x) == 0xffff)
-
-  here eputs ": TODO: WIFCONTINUED is not implemented\n" eputs
-  1 exit
-  cast(bool)
+  65535 = // 0xffff
 end
 
 inline proc WIFSIGNALED int -- bool in
@@ -560,17 +569,20 @@ inline proc WIFSIGNALED int -- bool in
   0 >
 end
 
+inline proc WTERMSIG int -- int in
+  // ((x) & 0x7f)
+  127 and // 0x7f
+end
+
 inline proc WIFEXITED int -- bool in
   // (((x) & 0x7f) == 0)
-  127 // 0x7f
-  and
+  127 and // 0x7f
   0 =
 end
 
 inline proc WEXITSTATUS int -- int in
   // (((x) & 0xff00) >> 8)
-  65280 // 0xff00
-  and
+  65280 and // 0xff00
   8 shr
 end
 
@@ -586,14 +598,17 @@ inline proc !Str.count int ptr in Str.count !64 end
 inline proc !Str.data ptr ptr in Str.data  !64 end
 
 inline proc @Str ptr -- int ptr in
-  dup @Str.count
-  swap @Str.data
+  let s in
+    s @Str.count
+    s @Str.data
+  end
 end
 
 inline proc !Str int ptr ptr in
-  dup rot swap
-  !Str.data
-  !Str.count
+  let n s p in
+    n p !Str.count
+    s p !Str.data
+  end
 end
 
 inline proc str-chop-one-left ptr in
@@ -606,11 +621,11 @@ inline proc str-chop-one-right ptr in
 end
 
 proc ?space int -- bool in
-       dup ' '  = if  true
-  else dup '\n' = if* true
-  else dup '\r' = if* true
-  else false end
-  swap drop
+  let x in
+    x ' '  =
+    x '\n' = lor
+    x '\r' = lor
+  end
 end
 
 proc str-trim-left ptr in // input --
@@ -671,29 +686,64 @@ in
   drop drop
 end
 
+proc str-chop-by-delim-2
+  int ptr  // input str
+  int      // delim
+  --
+  int ptr  // rest
+  int ptr  // prefix
+in
+  let n s1 delim in
+    0 s1
+    while
+      peek i s2 in
+        i n < if
+          s2 @8 delim !=
+        else false end
+      end
+    do
+      let i s2 in
+        i  1 +
+        s2 1 ptr+
+      end
+    end
+
+    let i s2 in
+      i n < if
+        n i - 1 -
+        s2    1 ptr+
+      else
+        n i -
+        s2
+      end
+      i s1
+    end
+  end
+end
+
 proc str-starts-with
   int ptr // prefix
   int ptr // input
   --
   bool
 in
-  memory prefix sizeof(Str) end
-  memory input sizeof(Str) end
-  input  !Str
-  prefix !Str
-
-  prefix @Str.count
-  input  @Str.count
-  <= if
-    0 while
-      dup prefix @Str.count < if
-        dup  input  @Str.data +ptr @8
-        over prefix @Str.data +ptr @8
-        =
-      else false end
-    do 1 + end
-    prefix @Str.count >=
-  else false end
+  let pn ps n s in
+    pn n <= if
+      pn ps s
+      while
+        peek pn ps s in
+          pn 0 > if ps @8 s @8 = else false end
+        end
+      do
+        let pn ps s in
+          pn 1 -
+          ps 1 ptr+
+          s  1 ptr+
+        end
+      end
+      let pn _ _ in pn 0 <= end
+    else false end
+  end
 end
 
 inline proc ?str-empty ptr -- bool in
@@ -708,38 +758,38 @@ proc streq
   --
   bool
 in
-  while
-    let n1 s1 n2 s2 in
-      n1 s1 n2 s2
-      n1 0 > n2 0 > land if
-        s1 @8 s2 @8 =
-      else false end
-    end
-  do
-    let n1 s1 n2 s2 in
-      n1 1 -
-      s1 1 ptr+
-      n2 1 -
-      s2 1 ptr+
-    end
-  end
+  let n s1 m s2 in
+    n m = if
+      n s1 s2
+      while
+        peek n s1 s2 in
+          n 0 > if
+            s1 @8 s2 @8 =
+          else false end
+        end
+      do
+        let n s1 s2 in
+          n  1 -
+          s1 1 ptr+
+          s2 1 ptr+
+        end
+      end
 
-  let n1 _ n2 _ in
-    n1 0 = n2 0 = land
+      let n _ _ in n 0 <= end
+    else false end
   end
 end
 
-// TODO: rename isdigit to ?digit
-inline proc isdigit int -- bool in
+inline proc ?digit int -- bool in
   let x in
     x '0' >=
     x '9' <=
     land
   end
 end
+inline proc isdigit int -- bool in ?digit end // @deprecated
 
-// TODO: rename isalpha to ?alpha
-inline proc isalpha int -- bool in
+inline proc ?alpha int -- bool in
   let x in
     x 'a' >=
     x 'z' <=
@@ -752,34 +802,46 @@ inline proc isalpha int -- bool in
     lor
   end
 end
+inline proc isalpha int -- bool in ?alpha end // @deprecated
 
-// TODO: rename isalnum to ?alnum
-inline proc isalnum int -- bool in
+inline proc ?alnum int -- bool in
   let x in
-    x isdigit
-    x isalpha
+    x ?digit
+    x ?alpha
     lor
   end
 end
+inline proc isalnum int -- bool in ?alnum end // @deprecated
 
 proc try-parse-int
   int ptr
   --
   int bool
 in
-  memory input sizeof(Str) end
-  input !Str
+  over 0 > if
+    0 // result
+    while
+      peek n s result in
+        n 0 > if s @8 ?digit else false end
+      end
+    do
+      let n s result in
+        n 1 -
+        s 1 ptr+
 
-  0 while
-    input @Str.count 0 > if
-      input @Str.data @8 isdigit
-    else false end
-  do
-    10 * input @Str.data @8 '0' - +
-    input str-chop-one-left
+        result 10 *
+        s @8 '0' -
+        +
+      end
+    end
+
+    let n _ result in
+      result n 0 <=
+    end
+  else
+    drop drop
+    0 false
   end
-
-  input @Str.count 0 <=
 end
 
 const PUTU_BUFFER_CAP 32 end
@@ -1168,7 +1230,7 @@ in
     swap 1 ptr+
   end
   drop 0 >
-  ch @int isalnum
+  ch @int ?alnum
   lor
 end
 
@@ -1337,6 +1399,9 @@ in
   end
 end
 
+// TODO: we need a better way of managing complex procedure contexts
+memory cmd-dev-null-stdout sizeof(bool) end
+
 // # Run external command
 //
 // Usage example:
@@ -1351,73 +1416,96 @@ end
 //
 // This runs external command `echo uwu`
 proc cmd-echoed
-  ptr   // array of cstrs reprets the command we are running
+  ptr   // array of cstrs representing the command we are running
   bool  // echo the command to stdout
 in
-  if
-    "[CMD]" puts
-    dup while dup @64 0 != do
-      " " puts
-      dup @64 cast(ptr) cstr-to-str shell-escape puts
-      8 ptr+
-    end drop
-    "\n" puts
-  end
+  let cmd echo in
+    echo if
+      "[CMD]" puts
+      cmd while dup @ptr NULL ptr!= do
+        " " puts
+        dup @ptr cstr-to-str shell-escape puts
+        8 ptr+
+      end drop
+      "\n" puts
+    end
 
-  memory wstatus sizeof(u64) end
+    memory wstatus sizeof(u64) end
 
-  fork
+    fork
 
-  dup 0 = if
-    // child process
-    drop
-    dup @ptr
-    swap
-    execvp
-    // TODO: report that you could not execute the child
-  else dup 0 > if*
-    // parent process
-    drop drop
+    let pid in
+      pid 0 = if
+        // child process
+        cmd-dev-null-stdout @bool if
+          // oldfd
+          stdout
 
-    while
-      NULL
-      0
-      wstatus
-      0 1 - // TODO: replace this with -1 when we support negative numbers
-      wait4 0 < if
-        "[ERROR] could not wait until the child process has finished executing\n" eputs
+          // newfd
+          0                   // mode
+          O_RDONLY            // flags
+          "/dev/null"c        // pathname
+          // TODO: this is lame, let's just support negative numbers properly @negative
+          0 100 - // AT_FDCWD // dirfd
+          openat
+
+          dup 0 < if
+            here eputs ": ERROR: could not open /dev/null to silence the command in cmd-echoed\n" eputs
+            1 exit
+          end
+
+          dup2 0 < if
+            here eputs ": ERROR: could not reopen /dev/null as stdout for child process in cmd-echoed\n" eputs
+            1 exit
+          end
+        end
+
+        cmd @ptr
+        cmd
+        execvp
+      else pid 0 > if*
+        // parent process
+        while
+          NULL
+          0
+          wstatus
+          0 1 - // TODO: replace this with -1 when we support negative numbers @negative
+          wait4 0 < if
+            "[ERROR] could not wait until the child process has finished executing\n" eputs
+            1 exit
+          end
+
+          wstatus @int
+            dup WIFEXITED if
+              dup WEXITSTATUS
+                dup 0 > if
+                  dup exit
+                end
+              drop
+
+              false // break
+            else dup WIFSIGNALED if*
+              "ERROR: the child process was terminated by a signal " eputs
+              dup WTERMSIG                                           eputu
+              "\n"                                                   eputs
+              255 exit
+
+              false // break
+            else dup WIFSTOPPED if*
+              true  // continue
+            else dup WIFCONTINUED if*
+              true  // continue
+            else
+              here eputs ": unreachable\n" eputs
+              1 exit
+              false // break
+            end
+          swap drop
+        do end
+      else
+        "[ERROR] could not fork a child\n" eputs
         1 exit
       end
-
-      wstatus @int
-        dup WIFEXITED if
-          dup WEXITSTATUS
-            dup 0 > if
-              dup exit
-            end
-          drop
-
-          false // break
-        else dup WIFSIGNALED if*
-          // TODO: print the signal that terminated the child
-          "ERROR: the child process was terminated by a signal\n" eputs
-          255 exit
-
-          false // break
-        else dup WIFSTOPPED if*
-          true  // continue
-        else dup WIFCONTINUED if*
-          true  // continue
-        else
-          here eputs ": unreachable\n" eputs
-          1 exit
-          false // break
-        end
-      swap drop
-    do end
-  else
-    drop drop
-    "[ERROR] could not fork a child\n" eputs
-    1 exit
+    end
   end
 end
