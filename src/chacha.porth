@@ -1,6 +1,6 @@
 include "core.porth"
 
-const sizeof(word) 4 end
+const sizeof(word) sizeof(u32) end
 
 const CHACHA_CONST[0] 1634760805 end // b"expa"
 const CHACHA_CONST[1] 857760878  end // b"nd-3"
