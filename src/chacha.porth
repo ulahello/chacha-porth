@@ -1,12 +1,4 @@
-include "std.porth"
-// NOTE: depends on these std items
-// - const sizeof(int)
-// - const sizeof(ptr)
-// - proc  @ptr
-// - proc  !ptr
-// - proc  ptr+
-// - proc  memcpy
-//   - proc  inc64
+include "core.porth"
 
 const sizeof(word) 4 end
 
