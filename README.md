@@ -30,11 +30,9 @@ be fixed in future versions of the compiler. For now, you can disable type
 checking with the `-unsafe` flag.
 
 ```console
-$ # Where $TARGET is your preferred target.
-$ porth -unsafe com -s -t $TARGET ./src/test.porth
-[INFO] renaming ./src/test.tmp -> ./src/test
-$ ./src/test
+$ porth -unsafe com -s -r ./src/test.porth
 [test_utils] passed
+[test_const] passed
 [2.1.1] passed
 [2.2.1] passed
 [2.3.2] passed
