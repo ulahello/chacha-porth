@@ -14,7 +14,7 @@ generation.
 
 This is intended for developers. If you want to use ChaCha, include
 [chacha.porth](./src/chacha.porth). It depends on a few memory-related procs
-from the standard library.
+from the core standard library.
 
 For an example of the library's usage, see [the examples](./examples).
 
