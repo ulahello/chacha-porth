@@ -201,7 +201,7 @@ in
   d @32
 end
 
-proc qr_index
+inline proc qr_index
   int int int int // indexes (a, b, c, d)
   ptr // &mut State
 in
@@ -242,7 +242,7 @@ in
   end
 end
 
-proc block_no_add
+inline proc block_no_add
   int // num_rounds
   ptr // &mut State
 in
@@ -259,7 +259,7 @@ in
 end
 
 // s1 += s2
-proc state+
+inline proc state+
   ptr // s1: &mut State
   ptr // s2: &State
 in
