@@ -1,4 +1,5 @@
-include "core.porth"
+// depends on memcpy
+include "std.porth"
 
 const sizeof(word) sizeof(u32) end
 
