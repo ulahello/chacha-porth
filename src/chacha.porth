@@ -25,7 +25,7 @@ in
 end
 
 // see <https://en.wikipedia.org/wiki/Circular_shift#Implementing_circular_shifts>
-proc rotl32
+inline proc rotl32
   int // value
   int // count
   --
