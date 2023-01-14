@@ -1,98 +1,225 @@
 include "std.porth"
 include "chacha.porth"
 
+proc log_test_name int ptr in
+  let len ptr in
+  "["          puts
+  len ptr      puts
+  "] " puts
+  end
+end
+
+const offsetof(Name) sizeof(int) sizeof(ptr) + end
+
+proc !Name
+  int ptr // name
+  ptr // &mut Names
+  int // index into Names
+--
+in
+  offsetof(Name) * ptr+
+  let name in
+    name sizeof(ptr) ptr+ !ptr name !int
+  end
+end
+
+proc @Name
+  ptr // &mut Names
+  int // index into Names
+--
+  int ptr // name
+in
+  offsetof(Name) * ptr+
+  let name in
+    name @int
+    name sizeof(ptr) ptr+ @ptr
+  end
+end
+
+proc test
+  int ptr // test name
+  int // length of both expect and got
+  ptr // ptr to expect (offset == sizeof(word))
+  ptr // ptr to got
+  ptr // ptr to [(len ptr); expect/got len]. these are the names of individual elements of expect/got
+in
+  memory fail sizeof(bool) end
+  false fail !bool
+
+  let
+    test_name_len test_name_ptr
+    len
+    expect_ptr
+    got_ptr
+    names_ptr
+  in
+    0 while dup len < do
+      dup sizeof(word) *
+      got_ptr over ptr+ @32
+      expect_ptr rot ptr+ @32
+
+      let i got expect in
+        got expect != if
+          test_name_len test_name_ptr log_test_name
+
+          names_ptr i @Name puts
+
+          ": found "       puts
+          got              putu
+          " but expected " puts
+          expect           putu
+          "\n"             puts
+
+          true fail !bool
+        end
+        i 1 +
+      end
+    end drop
+
+    test_name_len test_name_ptr log_test_name
+    fail @bool if
+      "failed\n" puts
+      1 exit
+    else
+      // test passed!
+      "passed\n" puts
+    end
+  end
+end
+
 const U32_MAX 4294967295 end
 
 inline proc trunc32 int -- int in
   U32_MAX and
 end
 
-proc test_utils in
-  U32_MAX 1 + trunc32 0 != if
-    "[test_utils] addition failed\n" puts
-    1 exit
-  end
+proc test_add in
+  memory names offsetof(Name) end
+    "(unique)" names 0 !Name
 
-  42 111 xor 69 != if
-    "[test_utils] xor failed\n" puts
-    1 exit
-  end
+  memory got sizeof(word) end
+    U32_MAX 1 + trunc32 got !32
 
-  4521984 16 rotl32 trunc32 69 != if
-     "[test_utils] rotl failed\n" puts
-     1 exit
-  end
+  memory expect sizeof(word) end
+    0 expect !32
 
-  "[test_utils] passed\n" puts
+  "add"
+  1
+  expect
+  got
+  names
+  test
+end
+
+proc test_xor in
+  memory names offsetof(Name) end
+    "(unique)" names 0 !Name
+
+  memory got sizeof(word) end
+    42 111 xor got !32
+
+  memory expect sizeof(word) end
+    69 expect !32
+
+  "xor"
+  1
+  expect
+  got
+  names
+  test
+end
+
+proc test_rotl in
+  memory names offsetof(Name) end
+    "(unique)" names 0 !Name
+
+  memory got sizeof(word) end
+    4521984 16 rotl32 trunc32 got !32
+
+  memory expect sizeof(word) end
+    69 expect !32
+
+  "rotl"
+  1
+  expect
+  got
+  names
+  test
 end
 
 proc test_const in
+  memory names offsetof(Name) 4 * end
+    "CHACHA_CONST[0]" names 0 !Name
+    "CHACHA_CONST[1]" names 1 !Name
+    "CHACHA_CONST[2]" names 2 !Name
+    "CHACHA_CONST[3]" names 3 !Name
+
+  memory expect sizeof(word) 4 * end
+    CHACHA_CONST[0] expect 0 sizeof(word) * ptr+ !32
+    CHACHA_CONST[1] expect 1 sizeof(word) * ptr+ !32
+    CHACHA_CONST[2] expect 2 sizeof(word) * ptr+ !32
+    CHACHA_CONST[3] expect 3 sizeof(word) * ptr+ !32
+
   "expand 32-byte k"
-  let _ ptr in
-    ptr sizeof(word) 0 * ptr+ @32
-    ptr sizeof(word) 1 * ptr+ @32
-    ptr sizeof(word) 2 * ptr+ @32
-    ptr sizeof(word) 3 * ptr+ @32
+  let _ got in
+    "chacha_const"
+    4
+    expect
+    got
+    names
+    test
   end
-
-  let a b c d in
-    a CHACHA_CONST[0] != if
-      "[test_const] CHACHA_CONST[0]: unexpected " puts a putu "\n" puts
-      1 exit
-    end
-
-    b CHACHA_CONST[1] != if
-      "[test_const] CHACHA_CONST[1]: unexpected " puts b putu "\n" puts
-      1 exit
-    end
-
-    c CHACHA_CONST[2] != if
-      "[test_const] CHACHA_CONST[2]: unexpected " puts c putu "\n" puts
-      1 exit
-    end
-
-    d CHACHA_CONST[3] != if
-      "[test_const] CHACHA_CONST[3]: unexpected " puts d putu "\n" puts
-      1 exit
-    end
-  end
-
-  "[test_const] passed\n" puts
 end
 
 proc test_2.1.1 in
+  memory names offsetof(Name) 4 * end
+    "a" names 0 !Name
+    "b" names 1 !Name
+    "c" names 2 !Name
+    "d" names 3 !Name
+
+  memory qr_got 4 sizeof(word) * end
+
+  memory qr_expect 4 sizeof(word) * end
+    3928658676 qr_expect 0 sizeof(word) * ptr+ !32 // a = 0xea2a92f4
+    3407673550 qr_expect 1 sizeof(word) * ptr+ !32 // b = 0xcb1cf8ce
+    1166100270 qr_expect 2 sizeof(word) * ptr+ !32 // c = 0x4581472e
+    1484899515 qr_expect 3 sizeof(word) * ptr+ !32 // d = 0x5881c4bb
+
+  // save quarter round to qr_got
   286331153  // a = 0x11111111
   16909060   // b = 0x01020304
   2609737539 // c = 0x9b8d6f43
   19088743   // d = 0x01234567
   qr
+  qr_got 3 sizeof(word) * ptr+ !32
+  qr_got 2 sizeof(word) * ptr+ !32
+  qr_got 1 sizeof(word) * ptr+ !32
+  qr_got 0 sizeof(word) * ptr+ !32
 
-  let a b c d in
-    a 3928658676 != if // assert a == 0xea2a92f4
-      "[2.1.1] a: unexpected " puts a putu "\n" puts
-      1 exit
-    end
-
-    b 3407673550 != if // assert b == 0xcb1cf8ce
-      "[2.1.1] b: unexpected " puts b putu "\n" puts
-      1 exit
-    end
-
-    c 1166100270 != if // assert c == 0x4581472e
-      "[2.1.1] c: unexpected " puts c putu "\n" puts
-      1 exit
-    end
-
-    d 1484899515 != if // assert d == 0x5881c4bb
-      "[2.1.1] d: unexpected " puts d putu "\n" puts
-      1 exit
-    end
-  end
-
-  "[2.1.1] passed\n" puts
+  "2.1.1"
+  4
+  qr_expect
+  qr_got
+  names
+  test
 end
 
 proc test_2.2.1 in
+  memory names offsetof(Name) 4 * end
+    "a" names 0 !Name
+    "b" names 1 !Name
+    "c" names 2 !Name
+    "d" names 3 !Name
+
+  memory got 4 sizeof(word) * end
+
+  memory expect 4 sizeof(word) * end
+    3182986972 expect 0 sizeof(word) * ptr+ !32 // a = 0xbdb886dc
+    3484200914 expect 1 sizeof(word) * ptr+ !32 // b = 0xcfacafd2
+    3832277632 expect 2 sizeof(word) * ptr+ !32 // c = 0xe46bea80
+    3435166841 expect 3 sizeof(word) * ptr+ !32 // d = 0xccc07c79
+
   memory state sizeof(State) end
     2274701792 // 0x879531e0
     3320640381 // 0xc5ecf37d
@@ -116,300 +243,101 @@ proc test_2.2.1 in
   2 7 8 13 state qr_index
 
   // push a, b, c, d to stack
-  state sizeof(word)  2 * ptr+ @32
-  state sizeof(word)  7 * ptr+ @32
-  state sizeof(word)  8 * ptr+ @32
-  state sizeof(word) 13 * ptr+ @32
+  state sizeof(word)  2 * ptr+ @32 got 0 sizeof(word) * ptr+ !32
+  state sizeof(word)  7 * ptr+ @32 got 1 sizeof(word) * ptr+ !32
+  state sizeof(word)  8 * ptr+ @32 got 2 sizeof(word) * ptr+ !32
+  state sizeof(word) 13 * ptr+ @32 got 3 sizeof(word) * ptr+ !32
 
-  let a b c d in
-    a 3182986972 != if // assert a == 0xbdb886dc
-      "[2.2.1] a: unexpected: " puts a putu "\n" puts
-      1 exit
-    end
-
-    b 3484200914 != if // assert b == 0xcfacafd2
-      "[2.2.1] b: unexpected " puts b putu "\n" puts
-      1 exit
-    end
-
-    c 3832277632 != if // assert c == 0xe46bea80
-      "[2.2.1] c: unexpected " puts c putu "\n" puts
-      1 exit
-    end
-
-    d 3435166841 != if // assert d == 0xccc07c79
-      "[2.2.1] d: unexpected " puts d putu "\n" puts
-      1 exit
-    end
-  end
-
-  "[2.2.1] passed\n" puts
+  "2.2.1"
+  4
+  expect
+  got
+  names
+  test
 end
 
-// these test checks are repeated code, maybe abstract with a function that compares an expected vs actual state?
-proc test_2.3.2_check1
-  int int int int int int int int int int int int int int int int
-  --
+proc test_2.3.2-rounds
+  ptr // names
+  ptr // init
+  ptr // after blocks
 in
-  let a b c d e f g h i j k l m n o p in
-    a 2205644971 != if // 0x837778ab
-      "[2.3.2] after 20 rounds [0]: unexpected " puts a putu "\n" puts
-      1 exit
-    end
+  let names init after_blocks in
+    memory expect sizeof(State) end
+     sizeof(State) after_blocks expect memcpy drop
 
-    b 3795375971 != if // 0xe238d763
-      "[2.3.2] after 20 rounds [1]: unexpected " puts b putu "\n" puts
-      1 exit
-    end
+    memory state sizeof(State) end
+      sizeof(State) init state memcpy drop
 
-    c 2793071134 != if // 0xa67ae21e
-      "[2.3.2] after 20 rounds [2]: unexpected " puts c putu "\n" puts
-      1 exit
-    end
+    20 state block_no_add
 
-    d 1498463023 != if // 0x5950bb2f
-      "[2.3.2] after 20 rounds [3]: unexpected " puts d putu "\n" puts
-      1 exit
-    end
-
-    e 3304247495 != if // 0xc4f2d0c7
-      "[2.3.2] after 20 rounds [4]: unexpected " puts e putu "\n" puts
-      1 exit
-    end
-
-    f 4234328879 != if // 0xfc62bb2f
-      "[2.3.2] after 20 rounds [5]: unexpected " puts f putu "\n" puts
-      1 exit
-    end
-
-    g 2409634044 != if // 0x8fa018fc
-      "[2.3.2] after 20 rounds [6]: unexpected " puts g putu "\n" puts
-      1 exit
-    end
-
-    h 1063176119 != if // 0x3f5ec7b7
-      "[2.3.2] after 20 rounds [7]: unexpected " puts h putu "\n" puts
-      1 exit
-    end
-
-    i 861041090  != if // 0x335271c2
-      "[2.3.2] after 20 rounds [8]: unexpected " puts i putu "\n" puts
-      1 exit
-    end
-
-    j 4069820915 != if // 0xf29489f3
-      "[2.3.2] after 20 rounds [9]: unexpected " puts j putu "\n" puts
-      1 exit
-    end
-
-    k 3938298108 != if // 0xeabda8fc
-      "[2.3.2] after 20 rounds [10]: unexpected " puts k putu "\n" puts
-      1 exit
-    end
-
-    l 2196008637 != if // 0x82e46ebd
-      "[2.3.2] after 20 rounds [11]: unexpected " puts l putu "\n" puts
-      1 exit
-    end
-
-    m 3516666548 != if // 0xd19c12b4
-      "[2.3.2] after 20 rounds [12]: unexpected " puts m putu "\n" puts
-      1 exit
-    end
-
-    n 2957907678 != if // 0xb04e16de
-      "[2.3.2] after 20 rounds [13]: unexpected " puts n putu "\n" puts
-      1 exit
-    end
-
-    o 2659438795 != if // 0x9e83d0cb
-      "[2.3.2] after 20 rounds [14]: unexpected " puts o putu "\n" puts
-      1 exit
-    end
-
-    p 1312575650 != if // 0x4e3c50a2
-      "[2.3.2] after 20 rounds [15]: unexpected " puts p putu "\n" puts
-      1 exit
-    end
+    "2.3.2-rounds"
+    16
+    expect
+    state
+    names
+    test
   end
 end
 
-proc test_2.3.2_check2
-  int int int int int int int int int int int int int int int int
-  --
+proc test_2.3.2-matrix
+  ptr // names
+  ptr // init
+  ptr // after blocks
 in
-  let a b c d e f g h i j k l m n o p in
-    a 3840405776 != if // 0xe4e7f110
-      "[2.3.2] after adding original state [0]: unexpected " puts a putu "\n" puts
-      1 exit
-    end
+  let names init after_blocks in
+    memory expect sizeof(State) end
+      3840405776 // 0xe4e7f110
+      358169553  // 0x15593bd1
+      534581072  // 0x1fdd0f50
+      3295748259 // 0xc47120a3
+      3354710471 // 0xc7f4d1c7
+      57196595   // 0x0368c033
+      2594841092 // 0x9aaa2204
+      1315755203 // 0x4e6cd4c3
+      1180992210 // 0x466482d2
+      162176775  // 0x09aa9f07
+      98026004   // 0x05d7c214
+      2718075865 // 0xa2028bd9
+      3516666549 // 0xd19c12b5
+      3108902622 // 0xb94e16de
+      3900952779 // 0xe883d0cb
+      1312575650 // 0x4e3c50a2
+    expect !State
 
-    b 358169553 != if // 0x15593bd1
-      "[2.3.2] after adding original state [1]: unexpected " puts b putu "\n" puts
-      1 exit
-    end
+    memory state sizeof(State) end
+      sizeof(State) after_blocks state memcpy drop
 
-    c 534581072 != if // 0x1fdd0f50
-      "[2.3.2] after adding original state [2]: unexpected " puts c putu "\n" puts
-      1 exit
-    end
+    state init state+
 
-    d 3295748259 != if // 0xc47120a3
-      "[2.3.2] after adding original state [3]: unexpected " puts d putu "\n" puts
-      1 exit
-    end
-
-    e 3354710471 != if // 0xc7f4d1c7
-      "[2.3.2] after adding original state [4]: unexpected " puts e putu "\n" puts
-      1 exit
-    end
-
-    f 57196595 != if // 0x0368c033
-      "[2.3.2] after adding original state [5]: unexpected " puts f putu "\n" puts
-      1 exit
-    end
-
-    g 2594841092 != if // 0x9aaa2204
-      "[2.3.2] after adding original state [6]: unexpected " puts g putu "\n" puts
-      1 exit
-    end
-
-    h 1315755203 != if // 0x4e6cd4c3
-      "[2.3.2] after adding original state [7]: unexpected " puts h putu "\n" puts
-      1 exit
-    end
-
-    i 1180992210 != if // 0x466482d2
-      "[2.3.2] after adding original state [8]: unexpected " puts i putu "\n" puts
-      1 exit
-    end
-
-    j 162176775 != if // 0x09aa9f07
-      "[2.3.2] after adding original state [9]: unexpected " puts j putu "\n" puts
-      1 exit
-    end
-
-    k 98026004 != if // 0x05d7c214
-      "[2.3.2] after adding original state [10]: unexpected " puts k putu "\n" puts
-      1 exit
-    end
-
-    l 2718075865 != if // 0xa2028bd9
-      "[2.3.2] after adding original state [11]: unexpected " puts l putu "\n" puts
-      1 exit
-    end
-
-    m 3516666549 != if // 0xd19c12b5
-      "[2.3.2] after adding original state [12]: unexpected " puts m putu "\n" puts
-      1 exit
-    end
-
-    n 3108902622 != if // 0xb94e16de
-      "[2.3.2] after adding original state [13]: unexpected " puts n putu "\n" puts
-      1 exit
-    end
-
-    o 3900952779 != if // 0xe883d0cb
-      "[2.3.2] after adding original state [14]: unexpected " puts o putu "\n" puts
-      1 exit
-    end
-
-    p 1312575650 != if // 0x4e3c50a2
-      "[2.3.2] after adding original state [15]: unexpected " puts p putu "\n" puts
-      1 exit
-    end
-  end
-end
-
-proc test_2.3.2_check3
-  int int int int int int int int int int int int int int int int
-  --
-in
-  let a b c d e f g h i j k l m n o p in
-    a 3840405776 != if // 0xe4e7f110
-      "[2.3.2] after full 20 round block [0]: unexpected " puts a putu "\n" puts
-      1 exit
-    end
-
-    b 358169553 != if // 0x15593bd1
-      "[2.3.2] after full 20 round block [1]: unexpected " puts b putu "\n" puts
-      1 exit
-    end
-
-    c 534581072 != if // 0x1fdd0f50
-      "[2.3.2] after full 20 round block [2]: unexpected " puts c putu "\n" puts
-      1 exit
-    end
-
-    d 3295748259 != if // 0xc47120a3
-      "[2.3.2] after full 20 round block [3]: unexpected " puts d putu "\n" puts
-      1 exit
-    end
-
-    e 3354710471 != if // 0xc7f4d1c7
-      "[2.3.2] after full 20 round block [4]: unexpected " puts e putu "\n" puts
-      1 exit
-    end
-
-    f 57196595 != if // 0x0368c033
-      "[2.3.2] after full 20 round block [5]: unexpected " puts f putu "\n" puts
-      1 exit
-    end
-
-    g 2594841092 != if // 0x9aaa2204
-      "[2.3.2] after full 20 round block [6]: unexpected " puts g putu "\n" puts
-      1 exit
-    end
-
-    h 1315755203 != if // 0x4e6cd4c3
-      "[2.3.2] after full 20 round block [7]: unexpected " puts h putu "\n" puts
-      1 exit
-    end
-
-    i 1180992210 != if // 0x466482d2
-      "[2.3.2] after full 20 round block [8]: unexpected " puts i putu "\n" puts
-      1 exit
-    end
-
-    j 162176775 != if // 0x09aa9f07
-      "[2.3.2] after full 20 round block [9]: unexpected " puts j putu "\n" puts
-      1 exit
-    end
-
-    k 98026004 != if // 0x05d7c214
-      "[2.3.2] after full 20 round block [10]: unexpected " puts k putu "\n" puts
-      1 exit
-    end
-
-    l 2718075865 != if // 0xa2028bd9
-      "[2.3.2] after full 20 round block [11]: unexpected " puts l putu "\n" puts
-      1 exit
-    end
-
-    m 3516666549 != if // 0xd19c12b5
-      "[2.3.2] after full 20 round block [12]: unexpected " puts m putu "\n" puts
-      1 exit
-    end
-
-    n 3108902622 != if // 0xb94e16de
-      "[2.3.2] after full 20 round block [13]: unexpected " puts n putu "\n" puts
-      1 exit
-    end
-
-    o 3900952779 != if // 0xe883d0cb
-      "[2.3.2] after full 20 round block [14]: unexpected " puts o putu "\n" puts
-      1 exit
-    end
-
-    p 1312575650 != if // 0x4e3c50a2
-      "[2.3.2] after full 20 round block [15]: unexpected " puts p putu "\n" puts
-      1 exit
-    end
+    "2.3.2-matrix"
+    16
+    expect
+    state
+    names
+    test
   end
 end
 
 proc test_2.3.2 in
-  memory state sizeof(State) end
+  memory names offsetof(Name) 16 * end
+    "0" names 0 !Name
+    "1" names 1 !Name
+    "2" names 2 !Name
+    "3" names 3 !Name
+    "4" names 4 !Name
+    "5" names 5 !Name
+    "6" names 6 !Name
+    "7" names 7 !Name
+    "8" names 8 !Name
+    "9" names 9 !Name
+    "10" names 10 !Name
+    "11" names 11 !Name
+    "12" names 12 !Name
+    "13" names 13 !Name
+    "14" names 14 !Name
+    "15" names 15 !Name
+
+  memory init sizeof(State) end
     1634760805 // 0x61707865
     857760878  // 0x3320646e
     2036477234 // 0x79622d32
@@ -426,35 +354,35 @@ proc test_2.3.2 in
     150994944  // 0x09000000
     1241513984 // 0x4a000000
     0          // 0x00000000
-  state !State
+  init !State
 
-  memory original sizeof(State) end
-  sizeof(State) state original memcpy drop
+  memory after_blocks sizeof(State) end
+    2205644971 // 0x837778ab
+    3795375971 // 0xe238d763
+    2793071134 // 0xa67ae21e
+    1498463023 // 0x5950bb2f
+    3304247495 // 0xc4f2d0c7
+    4234328879 // 0xfc62bb2f
+    2409634044 // 0x8fa018fc
+    1063176119 // 0x3f5ec7b7
+    861041090  // 0x335271c2
+    4069820915 // 0xf29489f3
+    3938298108 // 0xeabda8fc
+    2196008637 // 0x82e46ebd
+    3516666548 // 0xd19c12b4
+    2957907678 // 0xb04e16de
+    2659438795 // 0x9e83d0cb
+    1312575650 // 0x4e3c50a2
+  after_blocks !State
 
-  // 20 rounds of chacha without final matrix addition
-  20 state block_no_add
-
-  state @State
-  test_2.3.2_check1 // TODO: bring this function back into body when type checking can handle it
-
-  // add original input to state
-  state original state+
-
-  state @State
-  test_2.3.2_check2 // TODO: bring this function back into body when type checking can handle it
-
-  // do the same as previous two, but let chacha.porth do the addition
-  // at the end, `original` and `state` should be the same
-  20 original block
-
-  original @State
-  test_2.3.2_check3 // TODO: bring this function back into body when type checking can handle it
-
-  "[2.3.2] passed\n" puts
+  names init after_blocks test_2.3.2-rounds
+  names init after_blocks test_2.3.2-matrix
 end
 
 proc main in
-  test_utils
+  test_add
+  test_xor
+  test_rotl
   test_const
   test_2.1.1
   test_2.2.1
