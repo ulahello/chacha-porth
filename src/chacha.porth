@@ -22,7 +22,7 @@ in
 end
 
 // see <https://en.wikipedia.org/wiki/Circular_shift#Implementing_circular_shifts>
-inline proc rotl32
+proc rotl32
   int // value
   int // count
   --
@@ -52,7 +52,7 @@ inline proc State.key      ptr -- ptr in offsetof(State.key)     ptr+ end
 inline proc State.counter  ptr -- ptr in offsetof(State.counter) ptr+ end
 inline proc State.nonce    ptr -- ptr in offsetof(State.nonce)   ptr+ end
 
-inline proc @State.const
+proc @State.const
   ptr // &State
   --
   int int int int // words (0..4)
@@ -64,7 +64,7 @@ in
       sizeof(word) 3 * ptr+ @32
 end
 
-inline proc @State.key
+proc @State.key
   ptr // &State
   --
   int int int int int int int int // words (4..11)
@@ -88,7 +88,7 @@ in
   State.counter @32
 end
 
-inline proc @State.nonce
+proc @State.nonce
   ptr // &State
   --
   int int int // words (13..16)
@@ -99,7 +99,7 @@ in
       sizeof(word) 2 * ptr+ @32
 end
 
-inline proc !State.const
+proc !State.const
   int int int int // words (0..4)
   ptr // &mut State
 in
@@ -111,7 +111,7 @@ in
   drop
 end
 
-inline proc !State.key
+proc !State.key
   int int int int int int int int // words (4..11)
   ptr // &mut State
 in
@@ -134,7 +134,7 @@ in
   State.counter !32
 end
 
-inline proc !State.nonce
+proc !State.nonce
   int int int // words (13..16)
   ptr // &mut State
 in
@@ -202,7 +202,7 @@ in
   d @32
 end
 
-inline proc qr_index
+proc qr_index
   int int int int // indexes (a, b, c, d)
   ptr // &mut State
 in
@@ -221,7 +221,7 @@ in
   end
 end
 
-inline proc round_odd
+proc round_odd
   ptr // &mut State
 in
   let state in
@@ -232,7 +232,7 @@ in
   end
 end
 
-inline proc round_even
+proc round_even
   ptr // &mut State
 in
   let state in
@@ -243,7 +243,7 @@ in
   end
 end
 
-inline proc block_no_add
+proc block_no_add
   int // num_rounds
   ptr // &mut State
 in
@@ -260,7 +260,7 @@ in
 end
 
 // s1 += s2
-inline proc state+
+proc state+
   ptr // s1: &mut State
   ptr // s2: &State
 in
