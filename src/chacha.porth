@@ -181,26 +181,36 @@ in
   memory d sizeof(word) end d !32
   memory c sizeof(word) end c !32
   memory b sizeof(word) end b !32
-  memory a sizeof(word) end a !32
+  memory a sizeof(word) end dup a !32
 
-  a @32 b @32 +      a !32 // a += b
-  d @32 a @32 xor    d !32 // d ^= a
-  d @32 16    rotl32 d !32 // d <<<= 16
+  // stack: a
 
-  c @32 d @32 +      c !32 // c += d
-  b @32 c @32 xor    b !32 // b ^= c
-  b @32 12    rotl32 b !32 // b <<<= 12
+  b @32 + a !32 // a += b
+  d @32 a @32 xor // d ^= a
+  16 rotl32 dup d !32 // d <<<= 16
 
-  a @32 b @32 +      a !32 // a += b
-  d @32 a @32 xor    d !32 // d ^= a
-  d @32 8     rotl32 d !32 // d <<<= 8
+  // stack: d
 
-  c @32 d @32 +      c !32 // c += d
-  b @32 c @32 xor    b !32 // b ^= c
-  b @32 7     rotl32 b !32 // b <<<= 7
+  c @32 + c !32 // c += d
+  b @32 c @32 xor // b ^= c
+  12 rotl32 dup b !32 // b <<<= 12
+
+  // stack: b
+
+  a @32 + a !32 // a += b
+  d @32 a @32 xor // d ^= a
+  8 rotl32 dup d !32 // d <<<= 8
+
+ // stack: d
+
+  c @32 + c !32 // c += d
+  b @32 c @32 xor // b ^= c
+  7 rotl32 // b <<<= 7
+
+  // stack: b
 
   a @32
-  b @32
+  swap
   c @32
   d @32
 end
