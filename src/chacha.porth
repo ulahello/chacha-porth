@@ -1,3 +1,7 @@
+// chacha-porth: ChaCha implemenation in Porth
+// copyright (C) 2022-2023 Ula Shipman <ula.hello@mailbox.org>
+// licensed under MIT
+
 // depends on memcpy
 include "std.porth"
 

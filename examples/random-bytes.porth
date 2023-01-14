@@ -1,3 +1,7 @@
+// chacha-porth: ChaCha implemenation in Porth (example program which outputs random bytes)
+// copyright (C) 2022-2023 Ula Shipman <ula.hello@mailbox.org>
+// licensed under MIT
+
 // This example prints random bytes to stdout. It's not a correct
 // implementation of a ChaCha stream because it iteratively mutates the entire
 // state, instead of incrementing the initial state's counter. For an actual

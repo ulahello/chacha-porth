@@ -33,3 +33,12 @@ $ make examples
 ```
 **Caution when running them:** they write random bytes to `stdout` in a loop.
 The executables can be found in the [same folder](./examples).
+
+## Licensing
+
+The [Porth standard library](./std/) is licensed under the MIT license.
+The copyright is owned by Alexey Kutepov.
+
+The terms for distributing [RFC 7539](./res/chacha-rfc7539.txt) are found in [RFC 5378](https://datatracker.ietf.org/doc/rfc5378/).
+
+Everything else in this repository is licensed under the [MIT license](LICENSE).

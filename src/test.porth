@@ -1,3 +1,7 @@
+// chacha-porth: ChaCha implemenation in Porth (associated test framework)
+// copyright (C) 2022-2023 Ula Shipman <ula.hello@mailbox.org>
+// licensed under MIT
+
 include "std.porth"
 include "chacha.porth"
 
