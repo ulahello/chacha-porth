@@ -28,6 +28,6 @@ proc main in
     sizeof(State) state puts
 
     // increment counter of `init`
-    init State.counter @32 1 + init State.counter !32
+    init @State.counter 1 + init !State.counter
   end
 end
