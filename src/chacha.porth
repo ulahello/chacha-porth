@@ -2,7 +2,6 @@
 // copyright (C) 2022-2023 Ula Shipman <ula.hello@mailbox.org>
 // licensed under MIT
 
-// depends on memcpy
 include "std.porth"
 
 const sizeof(word) sizeof(u32) end
