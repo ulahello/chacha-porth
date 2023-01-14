@@ -287,27 +287,9 @@ proc test_2.3.2-matrix
   ptr // names
   ptr // init
   ptr // after blocks
+  ptr // final
 in
-  let names init after_blocks in
-    memory expect sizeof(State) end
-      3840405776 // 0xe4e7f110
-      358169553  // 0x15593bd1
-      534581072  // 0x1fdd0f50
-      3295748259 // 0xc47120a3
-      3354710471 // 0xc7f4d1c7
-      57196595   // 0x0368c033
-      2594841092 // 0x9aaa2204
-      1315755203 // 0x4e6cd4c3
-      1180992210 // 0x466482d2
-      162176775  // 0x09aa9f07
-      98026004   // 0x05d7c214
-      2718075865 // 0xa2028bd9
-      3516666549 // 0xd19c12b5
-      3108902622 // 0xb94e16de
-      3900952779 // 0xe883d0cb
-      1312575650 // 0x4e3c50a2
-    expect !State
-
+  let names init after_blocks final in
     memory state sizeof(State) end
       sizeof(State) after_blocks state memcpy drop
 
@@ -315,7 +297,27 @@ in
 
     "2.3.2-matrix"
     16
-    expect
+    final
+    state
+    names
+    test
+  end
+end
+
+proc test_2.3.2-block
+  ptr // names
+  ptr // init
+  ptr // final
+in
+  let names init final in
+    memory state sizeof(State) end
+      sizeof(State) init state memcpy drop
+
+    20 state block
+
+    "2.3.2-block"
+    16
+    final
     state
     names
     test
@@ -379,8 +381,28 @@ proc test_2.3.2 in
     1312575650 // 0x4e3c50a2
   after_blocks !State
 
+  memory final sizeof(State) end
+    3840405776 // 0xe4e7f110
+    358169553  // 0x15593bd1
+    534581072  // 0x1fdd0f50
+    3295748259 // 0xc47120a3
+    3354710471 // 0xc7f4d1c7
+    57196595   // 0x0368c033
+    2594841092 // 0x9aaa2204
+    1315755203 // 0x4e6cd4c3
+    1180992210 // 0x466482d2
+    162176775  // 0x09aa9f07
+    98026004   // 0x05d7c214
+    2718075865 // 0xa2028bd9
+    3516666549 // 0xd19c12b5
+    3108902622 // 0xb94e16de
+    3900952779 // 0xe883d0cb
+    1312575650 // 0x4e3c50a2
+  final !State
+
   names init after_blocks test_2.3.2-rounds
-  names init after_blocks test_2.3.2-matrix
+  names init after_blocks final test_2.3.2-matrix
+  names init final test_2.3.2-block
 end
 
 proc main in
