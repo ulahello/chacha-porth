@@ -31,8 +31,8 @@ To build and not run them, run the `examples` makefile target.
 $ make examples
 # output omitted
 ```
-**Caution when running them:** they write random bytes to `stdout` in a loop.
 The executables can be found in the [same folder](./examples).
+**Caution when running them:** they write random bytes to `stdout` in a loop.
 
 ## Licensing
 
