@@ -1,3 +1,5 @@
+OPTS := -s
+
 default: test-run
 
 .phony: test
@@ -26,10 +28,10 @@ clean-examples:
 	rm -fv examples/random-bytes
 
 src/test: src/test.porth std/* src/chacha.porth
-	porth com src/test.porth
+	porth com $(OPTS) src/test.porth
 
 examples/chacha20-stream: examples/chacha20-stream.porth std/* src/chacha.porth
-	porth com examples/chacha20-stream.porth
+	porth com $(OPTS) examples/chacha20-stream.porth
 
 examples/random-bytes: examples/random-bytes.porth std/* src/chacha.porth
-	porth com examples/random-bytes.porth
+	porth com $(OPTS) examples/random-bytes.porth
