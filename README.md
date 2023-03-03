@@ -20,6 +20,7 @@ $ make test-run
 [2.2.1] passed
 [2.3.2-rounds] passed
 [2.3.2-matrix] passed
+[2.3.2-block] passed
 ```
 
 ## Examples
